@@ -17,7 +17,7 @@ import { AuthService, User } from '../../../services/auth';
                 <i class="pi pi-bars"></i>
             </button>
             <a class="layout-topbar-logo" routerLink="/">
-                <span>Enotemático</span>
+                <span>Enosis</span>
             </a>
         </div>
 
@@ -70,3 +70,4 @@ export class AppTopbar {
         this.authService.logout().subscribe();
     }
 }
+

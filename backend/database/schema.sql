@@ -19,52 +19,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS restaurantes (
-  id SERIAL PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
-  capacidade INTEGER,
-  descricao TEXT
-);
-
-CREATE TABLE IF NOT EXISTS eventos (
-  id SERIAL PRIMARY KEY,
-  nome_evento VARCHAR(255) NOT NULL,
-  data_evento DATE NOT NULL,
-  horario_evento TIME NOT NULL,
-  id_restaurante INTEGER NOT NULL REFERENCES restaurantes(id) ON DELETE CASCADE,
-  UNIQUE (data_evento, horario_evento, id_restaurante)
-);
-
-CREATE TABLE IF NOT EXISTS reservas (
-  id SERIAL PRIMARY KEY,
-  idreservacm INTEGER NOT NULL,
-  numeroreservacm VARCHAR(255) NOT NULL,
-  coduh VARCHAR(255) NOT NULL,
-  nome_hospede VARCHAR(255) NOT NULL,
-  contato VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  data_checkin DATE NOT NULL,
-  data_checkout DATE NOT NULL,
-  qtd_hospedes INTEGER NOT NULL
-);
-
-ALTER TABLE IF EXISTS eventos_reservas
-  DROP CONSTRAINT IF EXISTS eventos_reservas_pkey;
-
-CREATE TABLE IF NOT EXISTS eventos_reservas (
-  evento_id INTEGER NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
-  reserva_id INTEGER NOT NULL REFERENCES reservas(id) ON DELETE CASCADE,
-  informacoes TEXT,
-  quantidade INTEGER DEFAULT 0,
-  status VARCHAR(20) DEFAULT 'Ativa',
-  voucher VARCHAR(10) UNIQUE NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS diretrizes (
-  id SERIAL PRIMARY KEY,
-  descricao TEXT NOT NULL,
-  ativo BOOLEAN DEFAULT TRUE
-);
+-- Removed modules: restaurantes, eventos, reservas, eventos_reservas, diretrizes
 
 CREATE TABLE IF NOT EXISTS regras_validacao (
   id SERIAL PRIMARY KEY,

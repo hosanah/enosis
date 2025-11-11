@@ -17,13 +17,10 @@ const { ApiError, errorHandler } = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const usersRoutes = require('./routes/users');
-const restaurantesRoutes = require('./routes/restaurantes');
-const eventosRoutes = require('./routes/eventos');
-const reservasRoutes = require('./routes/reservas');
-const eventosReservasRoutes = require('./routes/eventos_reservas');
-const diretrizesRoutes = require('./routes/diretrizes');
+// Removed modules: restaurantes, eventos, reservas (CM), eventos-reservas, diretrizes
 const configuracoesRoutes = require('./routes/configuracoes');
 const regrasRoutes = require('./routes/regras');
+const natalRoutes = require('./routes/natal.routes');
 
 // Importar middleware de autenticação
 const { authenticateToken } = require('./middleware/auth');
@@ -107,13 +104,10 @@ function requireDomainDb(req, res, next) {
 
 app.use('/dashboard', authenticateToken, dashboardRoutes);
 app.use('/users', authenticateToken, usersRoutes);
-app.use('/restaurantes', authenticateToken, requireDomainDb, restaurantesRoutes);
-app.use('/eventos', authenticateToken, requireDomainDb, eventosRoutes);
-app.use('/reservas', authenticateToken, requireDomainDb, reservasRoutes);
-app.use('/eventos-reservas', authenticateToken, requireDomainDb, eventosReservasRoutes);
-app.use('/diretrizes', authenticateToken, requireDomainDb, diretrizesRoutes);
+// Removed routes: restaurantes, eventos, reservas (CM), eventos-reservas, diretrizes
 app.use('/configuracoes', authenticateToken, requireDomainDb, configuracoesRoutes);
 app.use('/regras', authenticateToken, requireDomainDb, regrasRoutes);
+app.use('/natal', authenticateToken, requireDomainDb, natalRoutes);
 
 // Rota para servir arquivos estáticos (se necessário)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
