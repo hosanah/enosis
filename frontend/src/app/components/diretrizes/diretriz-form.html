@@ -1,0 +1,30 @@
+<p-card header="{{ isEdit ? 'Editar Diretriz' : 'Nova Diretriz' }}">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="card flex flex-col gap-4">
+
+    <div class="flex flex-col gap-2">
+      <label for="descricao">Descrição</label>
+      <textarea
+        id="descricao"
+        pInputTextarea
+        formControlName="descricao"
+        class="p-inputtextarea p-inputtext-fluid"
+      ></textarea>
+      <div class="text-red-500 text-sm" *ngIf="form.get('descricao')?.hasError('required') && form.get('descricao')?.touched">
+        Descrição é obrigatória.
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <label for="ativo">Ativo</label>
+      <p-toggleswitch witch id="ativo" formControlName="ativo"></p-toggleswitch >
+    </div>
+
+    <div class="flex gap-2 pt-2">
+      <button pButton type="submit" label="Salvar" [disabled]="isLoading"></button>
+      <button pButton type="button" label="Cancelar" class="p-button-secondary" (click)="cancel()"></button>
+    </div>
+
+  </form>
+</p-card>
+
+<p-toast></p-toast>

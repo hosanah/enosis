@@ -1,0 +1,41 @@
+<p-card>
+  <div class="font-semibold text-xl mb-4">Diretrizes</div>
+    <p-toolbar>
+      <div class="p-toolbar-start">
+      </div>
+      <div class="p-toolbar-end">
+        <button pButton icon="pi pi-plus" label="Novo" class="p-button" (click)="novo()"></button>
+      </div>
+    </p-toolbar>
+
+  <p-table
+    [value]="diretrizes"
+    [loading]="isLoading"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="totalRecords"
+    [first]="page * pageSize"
+    [lazy]="true"
+    (onPage)="onPage($event)"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Descrição</th>
+        <th>Ativo</th>
+        <th>Ações</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-d>
+      <tr>
+        <td>{{ d.descricao }}</td>
+        <td>{{ d.ativo ? 'Sim' : 'Não' }}</td>
+        <td>
+          <button pButton icon="pi pi-pencil" class="p-button-text" (click)="editar(d.id)"></button>
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-danger" (click)="excluir(d.id)"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-card>
+
+<p-toast></p-toast>

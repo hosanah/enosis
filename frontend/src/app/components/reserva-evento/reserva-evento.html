@@ -1,0 +1,179 @@
+<p-toast></p-toast>
+
+<div class="reserva-evento-layout">
+  <div class="left">
+    <h3>Reserva</h3>
+    <p-autoComplete
+      [(ngModel)]="reservaSelecionada"
+      [suggestions]="reservas"
+      field="id"
+      optionLabel="coduh"
+      (completeMethod)="buscarReserva($event)"
+      (onSelect)="onReservaSelect()"
+      placeholder="Código UH"
+    >
+    <ng-template let-reserva pTemplate="item">
+    <div>
+      <span class="font-medium">{{ reserva.coduh }} - {{ reserva.nome_hospede }}</span>
+    </div>
+  </ng-template>
+  </p-autoComplete>
+
+    <p-card *ngIf="reservaSelecionada !== undefined && (reservaSelecionada?.id ?? 0) > 0" class="reserva-info">
+      <div>ID: {{ reservaSelecionada.id }}</div>
+      <div>Hóspede: {{ reservaSelecionada.nome_hospede }}</div>
+      <div>Check-in: {{ reservaSelecionada.data_checkin | date:'dd/MM/yyyy':'UTC' }}</div>
+      <div>Check-out: {{ reservaSelecionada.data_checkout | date:'dd/MM/yyyy':'UTC' }}</div>
+      <div>Hóspedes: {{ reservaSelecionada.qtd_hospedes }}</div>
+      <div>Contato: {{ reservaSelecionada.contato }}</div>
+      <div>Email: {{ reservaSelecionada.email }}</div>
+    </p-card>
+
+    <p-message *ngIf="reservaSelecionada !== undefined && reservas.length == 0" severity="warn">
+      Não foi encontrada nenhuma reserva ativa para o código da UH informado: <b>{{reservaSelecionada}}</b>.
+    </p-message>
+
+    <div *ngIf="marcacoesExistentes.length > 0" class="marcacoes-existentes">
+      <p-message severity="info" text="Marcações desta reserva:"></p-message>
+      <div
+        class="marcacao-item"
+        *ngFor="let marcacao of marcacoesExistentes"
+      >
+        <div class="marcacao-info">
+          <small>
+            {{ marcacao.data_evento | date:'dd/MM/yyyy':'UTC' }} -
+            {{ marcacao.evento_nome }} ({{ marcacao.quantidade }} pessoas)
+          </small>
+          <small>Voucher: {{ marcacao.voucher }}</small>
+          <p-tag
+            [value]="marcacao.status"
+            [severity]="getTagSeverity(marcacao.status)"
+          ></p-tag>
+        </div>
+        <div class="marcacao-actions">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-check"
+            class="p-button-rounded p-button-success"
+            (click)="atualizarStatus(marcacao, 'Finalizada')"
+            title="Compareceu"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-times"
+            class="p-button-rounded p-button-danger"
+            (click)="atualizarStatus(marcacao, 'Cancelada')"
+            title="Cancelado"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-user-minus"
+            class="p-button-rounded p-button-warning"
+            (click)="atualizarStatus(marcacao, 'Não Compareceu')"
+            title="Não Compareceu"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="Imprimir Voucher"
+            icon="pi pi-print"
+            class="p-button-text"
+            (click)="abrirVoucher(marcacao)"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <h3>Evento</h3>
+    
+    <div class="evento-selection">
+      <label for="dataEvento">Data do Evento:</label>
+      <p-datepicker 
+        id="dataEvento"
+        [(ngModel)]="dataEvento" 
+        (onSelect)="selecionarData()"
+        placeholder="Selecione a data"
+        [minDate]="hoje"
+        dateFormat="dd/mm/yy"
+      ></p-datepicker>
+    </div>
+
+    <div class="evento-selection" *ngIf="dataEvento">
+      <label for="evento">Evento do Dia:</label>
+      <p-select
+        id="evento"
+        [(ngModel)]="eventoSelecionado"
+        [options]="eventos"
+        optionLabel="nome"
+        placeholder="Selecione o evento"
+        (onChange)="onEventoChange()"
+      ></p-select>
+    </div>
+  </div>
+</div>
+<div class="reserva-evento-layout">
+  <div class="left">
+   <div class="save-form" *ngIf="eventoSelecionado && disponibilidade">
+      <h4>Formulário de Marcação</h4>
+      
+      <div class="form-field">
+        <label for="informacoes">Informações Adicionais:</label>
+        <textarea
+          id="informacoes"
+          pInputTextarea
+          [(ngModel)]="informacoes"
+          placeholder="Digite informações adicionais sobre a marcação"
+          rows="3"
+        ></textarea>
+      </div>
+      
+      <div class="form-field">
+        <label for="quantidade">Quantidade de Pessoas:</label>
+        <p-inputNumber 
+          id="quantidade"
+          [(ngModel)]="quantidade" 
+          [min]="1" 
+          [max]="disponibilidade.vagas_restantes || 999"
+          placeholder="Número de pessoas"
+        ></p-inputNumber>
+        <small *ngIf="disponibilidade" class="quantity-hint">
+          Máximo disponível: {{ disponibilidade.vagas_restantes }} pessoas
+        </small>
+      </div>
+      
+      <button
+        pButton
+        type="button"
+        label="Salvar Marcação"
+        icon="pi pi-check"
+        (click)="salvarMarcacao()"
+        [disabled]="!reservaSelecionada || !eventoSelecionado || !quantidade || !dataEvento"
+        class="save-button"
+      ></button>
+    </div>
+  </div>
+
+  <div class="right">
+    <div *ngIf="disponibilidade" class="disponibilidade">
+      <div class="chart-container">
+        <p-chart type="doughnut" [data]="chartData" width="200" height="200"></p-chart>
+      </div>
+      <div class="info">
+        <h4>Disponibilidade</h4>
+        <p><strong>Capacidade Total:</strong> {{ disponibilidade.capacidade_total }}</p>
+        <p><strong>Já Reservado:</strong> {{ disponibilidade.ocupacao }}</p>
+        <p><strong>Vagas Restantes:</strong> 
+          <span [class.text-success]="disponibilidade.vagas_restantes > 0" 
+                [class.text-danger]="disponibilidade.vagas_restantes === 0">
+            {{ disponibilidade.vagas_restantes }}
+          </span>
+        </p>
+      </div>
+    </div>   
+  </div>
+</div>

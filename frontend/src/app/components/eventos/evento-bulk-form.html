@@ -1,0 +1,93 @@
+<p-card header="Eventos em Massa">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="card flex flex-col gap-4">
+
+    <div class="flex flex-col gap-2">
+      <label for="nome">Nome</label>
+      <input
+        id="nome"
+        type="text"
+        pInputText
+        formControlName="nome"
+        class="p-inputtext p-inputtext-fluid"
+      />
+      <div class="text-red-500 text-sm" *ngIf="form.get('nome')?.hasError('required') && form.get('nome')?.touched">
+        Nome é obrigatório.
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="dataInicio">Data Inicial</label>
+      <input
+        id="dataInicio"
+        type="date"
+        pInputText
+        formControlName="dataInicio"
+        class="p-inputtext p-inputtext-fluid"
+      />
+      <div class="text-red-500 text-sm" *ngIf="form.get('dataInicio')?.hasError('required') && form.get('dataInicio')?.touched">
+        Data inicial é obrigatória.
+      </div>
+      <div class="text-red-500 text-sm" *ngIf="form.get('dataInicio')?.hasError('pattern') && form.get('dataInicio')?.touched">
+        Formato de data inválido.
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="dataFim">Data Final</label>
+      <input
+        id="dataFim"
+        type="date"
+        pInputText
+        formControlName="dataFim"
+        class="p-inputtext p-inputtext-fluid"
+      />
+      <div class="text-red-500 text-sm" *ngIf="form.get('dataFim')?.hasError('required') && form.get('dataFim')?.touched">
+        Data final é obrigatória.
+      </div>
+      <div class="text-red-500 text-sm" *ngIf="form.get('dataFim')?.hasError('pattern') && form.get('dataFim')?.touched">
+        Formato de data inválido.
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="hora">Hora</label>
+      <input
+        id="hora"
+        type="time"
+        pInputText
+        formControlName="hora"
+        class="p-inputtext p-inputtext-fluid"
+      />
+      <div class="text-red-500 text-sm" *ngIf="form.get('hora')?.hasError('required') && form.get('hora')?.touched">
+        Hora é obrigatória.
+      </div>
+      <div class="text-red-500 text-sm" *ngIf="form.get('hora')?.hasError('pattern') && form.get('hora')?.touched">
+        Formato de hora inválido.
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="restaurante">Restaurante</label>
+      <p-select
+        id="restaurante"
+        [options]="restaurantes"
+        optionLabel="nome"
+        optionValue="id"
+        formControlName="restauranteId"
+        placeholder="Selecione um restaurante"
+        class="w-full"
+      ></p-select>
+      <div class="text-red-500 text-sm" *ngIf="form.get('restauranteId')?.hasError('required') && form.get('restauranteId')?.touched">
+        Restaurante é obrigatório.
+      </div>
+    </div>
+
+    <div class="flex gap-2 pt-2">
+      <button pButton type="submit" label="Salvar" [disabled]="isLoading"></button>
+      <button pButton type="button" label="Cancelar" class="p-button-secondary" (click)="cancel()"></button>
+    </div>
+
+  </form>
+</p-card>
+
+<p-toast></p-toast>
