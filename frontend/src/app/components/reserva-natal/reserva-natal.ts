@@ -1,11 +1,12 @@
 ﻿import { Component, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
+import { MessageModule } from 'primeng/message';
 import { MessageService } from 'primeng/api';
 import { ReservaNatalService } from '../../services/reserva-natal.service';
 
@@ -30,7 +31,7 @@ type Reserva = {
     TableModule,
     TooltipModule,
     ToastModule,
-    DatePipe
+    MessageModule
   ],
   templateUrl: './reserva-natal.html',
   styleUrls: ['./reserva-natal.scss']
@@ -47,7 +48,18 @@ export class ReservaNatalComponent implements OnInit {
   mesaSelecionada: string | null = null;
   mesaSelecionadaId: number | null = null;
   isFiltrosCollapsed = false;
+  isMesasCollapsed = false;
   mesas: { idmarcacaomesa?: number; nummesa: number; ordem: number; ocupados: number; quantidadetotal: number }[] = [];
+  // Filtros e paginação de mesas
+  mesaFilter: 'all' | 'occupied' | 'empty' | 'partial' = 'all';
+  mesaPageSizeOptions = [50, 100, 200, 500];
+  mesaPageSize = 50;
+  mesaPage = 1;
+  mesasFiltradas: { idmarcacaomesa?: number; nummesa: number; ordem: number; ocupados: number; quantidadetotal: number }[] = [];
+  mesasPagina: { idmarcacaomesa?: number; nummesa: number; ordem: number; ocupados: number; quantidadetotal: number }[] = [];
+  reservasDaMesa: { idreservasfront?: number; quantidade?: number; reservas?: number; numreserva?: string; coduh?: string; data_checkin?: string; data_checkout?: string; nome_hospede?: string }[] = [];
+  reservaMesaSelecionada: { idreservasfront?: number; quantidade?: number; reservas?: number; numreserva?: string; coduh?: string; data_checkin?: string; data_checkout?: string; nome_hospede?: string } | null = null;
+  isLoadingReservasMesa = false;
 
   constructor(private fb: FormBuilder, private service: ReservaNatalService, private messageService: MessageService) {
     this.filtroForm = this.fb.group({
@@ -75,12 +87,15 @@ export class ReservaNatalComponent implements OnInit {
     this.service.getMesas().subscribe({
       next: (res) => {
         this.mesas = res.data || [];
+        this.aplicarFiltroMesas();
         if (!this.mesas.length) {
           this.messageService.add({ severity: 'info', summary: 'Mesas', detail: 'Nenhuma mesa encontrada.' });
         }
       },
       error: () => {
         this.mesas = [];
+        this.mesasFiltradas = [];
+        this.mesasPagina = [];
         this.messageService.add({ severity: 'error', summary: 'Mesas', detail: 'Falha ao carregar as mesas.' });
       }
     });
@@ -97,6 +112,7 @@ export class ReservaNatalComponent implements OnInit {
         next: (res: any) => {
           this.reservas = (res.data || []).map((r: any) => ({
             id: r.id,
+            numreserva: (r as any).numreserva ?? undefined,
             nome_hospede: r.nome_hospede,
             coduh: r.coduh,
             data_checkin: r.data_checkin ? new Date(r.data_checkin) : null,
@@ -124,19 +140,47 @@ export class ReservaNatalComponent implements OnInit {
     this.isFiltrosCollapsed = !this.isFiltrosCollapsed;
   }
 
+  toggleMesas() {
+    this.isMesasCollapsed = !this.isMesasCollapsed;
+  }
+
   onSelecionarReserva(r: Reserva) {
     this.reservaSelecionada = r;
-    this.mesaSelecionada = null;
     this.isFiltrosCollapsed = true;
   }
 
-    onSelecionarMesa(mesa: any) {
+  onSelecionarMesa(mesa: any) {
     if (mesa && typeof mesa === 'object') {
       this.mesaSelecionadaId = mesa.idmarcacaomesa ?? null;
       this.mesaSelecionada = `Mesa ${mesa.nummesa}`;
     } else {
       this.mesaSelecionada = String(mesa);
     }
+    // Buscar reservas vinculadas somente se mesa tiver ocupação
+    const ocupados = (mesa && typeof mesa === 'object') ? Number(mesa.ocupados || 0) : 0;
+    this.reservaMesaSelecionada = null;
+    if (this.mesaSelecionadaId && ocupados > 0) {
+      this.isLoadingReservasMesa = true;
+      this.reservasDaMesa = [];
+      this.service.getReservasPorMesa(this.mesaSelecionadaId).subscribe({
+        next: (res) => {
+          this.reservasDaMesa = res.data || [];
+          // Exibição via UI abaixo do formulário; sem alert/toast
+        },
+        error: () => {
+          this.reservasDaMesa = [];
+        },
+        complete: () => {
+          this.isLoadingReservasMesa = false;
+        }
+      });
+    } else {
+      this.reservasDaMesa = [];
+    }
+  }
+
+  onSelecionarReservaDaMesa(item: { idreservasfront?: number; quantidade?: number; reservas?: number; numreserva?: string; coduh?: string; data_checkin?: string; data_checkout?: string; nome_hospede?: string }) {
+    this.reservaMesaSelecionada = item || null;
   }
 
   trackByMesa(index: number, mesa: string) {
@@ -158,6 +202,99 @@ export class ReservaNatalComponent implements OnInit {
 
   trackByMesaItem(index: number, m: { nummesa: number }) {
     return m.nummesa;
+  }
+
+  get reservaSelecionadaTexto(): string {
+    const r = this.reservaSelecionada;
+    return r ? `${r.nome_hospede} (UH ${r.coduh})` : '';
+  }
+
+  onLimparReserva() {
+    this.reservaSelecionada = null;
+  }
+
+  onLimparMesa() {
+    this.mesaSelecionada = null;
+    this.mesaSelecionadaId = null;
+  }
+
+  onLimparFormulario() {
+    this.confirmForm.reset({ quantidade: 1, observacoes: '' });
+    this.mesaSelecionada = null;
+    this.mesaSelecionadaId = null;
+    this.reservaSelecionada = null;
+  }
+
+  onCancelar() {
+    this.confirmForm.reset({ quantidade: 1, observacoes: '' });
+    this.reservaSelecionada = null;
+    this.mesaSelecionada = null;
+    this.mesaSelecionadaId = null;
+    this.reservasDaMesa = [];
+    this.reservaMesaSelecionada = null;
+  }
+
+  onCancelarReservaMesa() {
+    this.reservaMesaSelecionada = null;
+  }
+
+  // Filtro e paginação de mesas
+  aplicarFiltroMesas() {
+    const f = this.mesaFilter;
+    this.mesasFiltradas = (this.mesas || []).filter(m => {
+      const ocup = Number(m.ocupados || 0);
+      const total = Number(m.quantidadetotal || 0);
+      const isEmpty = total > 0 ? ocup === 0 : false;
+      const isFull = total > 0 ? ocup === total : false;
+      const isPartial = total > 0 ? ocup > 0 && ocup < total : false;
+      switch (f) {
+        case 'empty': return isEmpty;
+        case 'occupied': return isFull;
+        case 'partial': return isPartial;
+        default: return true;
+      }
+    }).sort((a,b) => (a.ordem ?? a.nummesa) - (b.ordem ?? b.nummesa));
+    this.mesaPage = 1;
+    this.atualizarPaginaMesas();
+  }
+
+  atualizarPaginaMesas() {
+    const start = (this.mesaPage - 1) * this.mesaPageSize;
+    const end = start + this.mesaPageSize;
+    this.mesasPagina = this.mesasFiltradas.slice(start, end);
+  }
+
+  totalPaginasMesas() {
+    if (!this.mesasFiltradas.length || !this.mesaPageSize) return 1;
+    return Math.max(1, Math.ceil(this.mesasFiltradas.length / this.mesaPageSize));
+  }
+
+  onMesaFilterChange(val: string) {
+    const allowed = new Set(['all','occupied','empty','partial']);
+    this.mesaFilter = allowed.has(val) ? (val as any) : 'all';
+    this.aplicarFiltroMesas();
+  }
+
+  onMesaPageSizeChange(val: string | number) {
+    const n = Number(val);
+    this.mesaPageSize = this.mesaPageSizeOptions.includes(n) ? n : 50;
+    this.mesaPage = 1;
+    this.atualizarPaginaMesas();
+  }
+
+  prevMesaPage() {
+    if (this.mesaPage > 1) {
+      this.mesaPage--;
+      this.atualizarPaginaMesas();
+    }
+  }
+
+  nextMesaPage() {
+    const last = this.totalPaginasMesas();
+    if (this.mesaPage < last) {
+      this.mesaPage++;
+      this.atualizarPaginaMesas();
+    }
   }
   onSalvar() {
     if (!this.reservaSelecionada || !this.mesaSelecionada || this.confirmForm.invalid) return;

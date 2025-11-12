@@ -33,7 +33,7 @@ export const routes: Routes = [
       { path: 'change-password', loadComponent: () => import('./components/change-password/change-password').then(m => m.ChangePasswordComponent) },
       { path: 'reserva-natal', loadComponent: () => import('./components/reserva-natal/reserva-natal').then(m => m.ReservaNatalComponent) },
       
-      { path: 'regras', loadComponent: () => import('./components/regras/regra-list').then(m => m.RegraListComponent) },
+      
       
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: '**', redirectTo: 'dashboard' }

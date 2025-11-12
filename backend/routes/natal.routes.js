@@ -108,6 +108,50 @@ router.get('/mesas', async (req, res) => {
   }
 });
 
+// GET /natal/mesas/:id/reservas — reservas vinculadas à mesa
+router.get('/mesas/:id/reservas', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id || Number.isNaN(id)) {
+      return res.status(400).json({ error: 'ID de mesa inválido' });
+    }
+    const db = getOracle();
+    // Consulta conforme especificado pelo cliente
+    const sql = `
+      SELECT DISTINCT EI.IDMARCACAOMESA,
+             H.NOME || ' ' || H.SOBRENOME  AS NOMECOMPLETO,
+             RV.CODUH,
+             (SELECT COUNT(EII.IDMARCACAOITEM)
+                FROM CM.ENOMARCACAOITEM EII
+               WHERE EM.IDMARCACAOMESA = EII.IDMARCACAOMESA
+                 AND EII.STATUS = 1) AS RESERVAS
+        FROM CM.ENOMARCACAOMESA EM,
+             CM.ENOMARCACAOITEM EI,
+             CM.RESERVASFRONT RV,
+             CM.MOVIMENTOHOSPEDES MH,
+             CM.HOSPEDE H
+       WHERE EM.IDMARCACAOMESA = EI.IDMARCACAOMESA
+         AND EI.STATUS = 1
+         AND RV.IDRESERVASFRONT = MH.IDRESERVASFRONT
+         AND MH.IDHOSPEDE = H.IDHOSPEDE
+         AND MH.PRINCIPAL = 'S'
+         AND RV.STATUSRESERVA = 2
+         AND RV.IDRESERVASFRONT = EI.IDRESERVASFRONT
+         AND EM.IDMARCACAOMESA = ?`;
+    const { rows } = await db.query(sql, [id]);
+    const data = (rows || []).map(r => ({
+      idmarcacaomesa: r.IDMARCACAOMESA ?? r.idmarcacaomesa,
+      nome_hospede: r.NOMECOMPLETO ?? r.nomecompleto,
+      coduh: r.CODUH ?? r.coduh,
+      reservas: r.RESERVAS ?? r.reservas
+    }));
+    res.json({ data });
+  } catch (err) {
+    console.error('Erro ao buscar reservas por mesa:', err);
+    res.status(500).json({ error: 'Falha ao consultar reservas por mesa.' });
+  }
+});
+
 // POST /natal/marcacoes — marcar itens livres da mesa para a reserva
 router.post('/marcacoes', async (req, res) => {
   try {

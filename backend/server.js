@@ -19,7 +19,6 @@ const dashboardRoutes = require('./routes/dashboard');
 const usersRoutes = require('./routes/users');
 // Removed modules: restaurantes, eventos, reservas (CM), eventos-reservas, diretrizes
 const configuracoesRoutes = require('./routes/configuracoes');
-const regrasRoutes = require('./routes/regras');
 const natalRoutes = require('./routes/natal.routes');
 
 // Importar middleware de autenticação
@@ -106,7 +105,6 @@ app.use('/dashboard', authenticateToken, dashboardRoutes);
 app.use('/users', authenticateToken, usersRoutes);
 // Removed routes: restaurantes, eventos, reservas (CM), eventos-reservas, diretrizes
 app.use('/configuracoes', authenticateToken, requireDomainDb, configuracoesRoutes);
-app.use('/regras', authenticateToken, requireDomainDb, regrasRoutes);
 app.use('/natal', authenticateToken, requireDomainDb, natalRoutes);
 
 // Rota para servir arquivos estáticos (se necessário)
