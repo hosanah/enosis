@@ -66,7 +66,7 @@
               <th>Código UH</th>
               <th>Check-in</th>
               <th>Check-out</th>
-              <th style="width: 1%">AÃ§Ãµes</th>
+              <th style="width: 1%">Ações</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-r>
@@ -90,7 +90,7 @@
       </ng-template>
     </div>
   </div>  <!-- Painel  Mesas + FormulÃ¡rio (12 colunas: 2 form, 10 botÃµes) -->
-  <div data-ngc-removed="true"><div class="card">
+  <div class="card">
     <div class="section-header">
       <i class="pi pi-table"></i>
       <div>
@@ -131,12 +131,12 @@
             <input id="quantidade" type="number" pInputText formControlName="quantidade" min="1" />
           </div>
           <div class="field col-12">
-            <label for="observacoes">ObservaÃ§Ãµes</label>
+            <label for="observacoes">Observações</label>
             <textarea id="observacoes" formControlName="observacoes" rows="3" class="p-inputtext p-inputtext-fluid"></textarea>
           </div>
           <div class="actions">
             <button pButton type="button" (click)="onSalvar()" [disabled]="confirmForm.invalid || !reservaSelecionada || !mesaSelecionada" class="p-button-sm"
-                    pTooltip="Salvar seleÃ§Ã£oo" tooltipPosition="top">
+                    pTooltip="Salvar seleção" tooltipPosition="top">
               <i class="pi pi-check mr-2"></i>
               <span>Salvar</span>
             </button>
@@ -162,19 +162,23 @@
             <span *ngIf="!isLoadingReservasMesa">({{ reservasDaMesa.length }})</span>
           </div>
           <div *ngIf="isLoadingReservasMesa">Carregando...</div>
-          <ul *ngIf="!isLoadingReservasMesa" style="margin:0; padding-left:1rem;">
-            <li *ngFor="let x of reservasDaMesa" style="display:flex; align-items:center; gap:.5rem;">
-              <span style="flex:1 1 auto;">
-                {{ x.nome_hospede || ('Reserva ' + (x.numreserva || '')) }} —
-                {{ (x.quantidade != null ? x.quantidade : x.reservas) || 0 }} lugar(es)
-                <span *ngIf="x.coduh"> — UH {{ x.coduh }}</span>
-              </span>
-              <button pButton type="button" class="p-button-text p-button-sm" (click)="onSelecionarReservaDaMesa(x)">Selecionar</button>
+          <ul *ngIf="!isLoadingReservasMesa" class="reservas-mesa-list">
+            <li *ngFor="let x of reservasDaMesa" class="reserva-item">
+              <p-message severity="contrast">
+                <div class="reserva-message-content">
+                  <span class="reserva-message-text">{{ reservaMesaLabel(x) }}</span>
+                  <button pButton type="button" class="p-button-text p-button-danger p-button-sm" (click)="onExcluirReservaMesa(x)">
+                    <i class="pi pi-trash mr-1"></i>
+                    <span>Excluir</span>
+                  </button>
+                </div>
+              </p-message>
             </li>
           </ul>
         </div>
-      </div>
-      <div class="buttons-col">
+      </div>      
+    </div>
+    <div class="buttons-col">
         <div class="filters" style="display:flex; gap:.75rem; align-items:center; flex-wrap: wrap; margin-bottom:.75rem;">
           <label>Exibir:</label>
           <select class="p-inputtext" [value]="mesaFilter" (change)="onMesaFilterChange($any($event.target).value)">
@@ -198,14 +202,17 @@
             <span *ngIf="!isLoadingReservasMesa">({{ reservasDaMesa.length }})</span>
           </div>
           <div *ngIf="isLoadingReservasMesa">Carregando...</div>
-          <ul *ngIf="!isLoadingReservasMesa" style="margin:0; padding-left:1rem;">
-            <li *ngFor="let x of reservasDaMesa" style="display:flex; align-items:center; gap:.5rem;">
-              <span style="flex:1 1 auto;">
-                {{ x.nome_hospede || ('Reserva ' + (x.numreserva || '')) }} —
-                {{ (x.quantidade != null ? x.quantidade : x.reservas) || 0 }} lugar(es)
-                <span *ngIf="x.coduh"> — UH {{ x.coduh }}</span>
-              </span>
-              <button pButton type="button" class="p-button-text p-button-sm" (click)="onSelecionarReservaDaMesa(x)">Selecionar</button>
+          <ul *ngIf="!isLoadingReservasMesa" class="reservas-mesa-list">
+            <li *ngFor="let x of reservasDaMesa" class="reserva-item">
+              <p-message severity="contrast">
+                <div class="reserva-message-content">
+                  <span class="reserva-message-text">{{ reservaMesaLabel(x) }}</span>
+                  <button pButton type="button" class="p-button-text p-button-danger p-button-sm" (click)="onExcluirReservaMesa(x)">
+                    <i class="pi pi-trash mr-1"></i>
+                    <span>Excluir</span>
+                  </button>
+                </div>
+              </p-message>
             </li>
           </ul>
         </div>
@@ -223,133 +230,9 @@
         <ng-template #mesasEmpty>
           <div class="empty"><i class="pi pi-inbox"></i><div>Nenhuma mesa disponÃ­vel.</div></div>
         </ng-template>
-      </div>
     </div>
   </div>
-  </div>
-
-  <!-- Painel – Mesas + Formulário (12 colunas: 2 form, 10 botões) -->
-  <div class="card">
-    <div class="section-header">
-      <i class="pi pi-table"></i>
-      <div>
-        <div class="title">Mesas</div>
-        <div class="subtitle">Ocupação atual e confirmação da seleção</div>
-      </div>
-    </div>
-    <div class="grid-12">
-      <div class="form-col">
-        <form [formGroup]="confirmForm" class="form-grid">
-          <div class="field col-12">
-            <label>Reserva selecionada</label>
-            <input pInputText [value]="reservaSelecionadaTexto" readonly 
-                   pTooltip="Defina uma reserva na lista acima" tooltipPosition="top" />
-          </div>
-          <div class="field col-12">
-            <label>Mesa selecionada</label>
-            <input pInputText [value]="mesaSelecionada || ''" readonly pTooltip="Selecione uma mesa ao lado" tooltipPosition="top" />
-          </div>
-          <div class="field">
-            <label for="quantidade">Quantidade</label>
-            <input id="quantidade" type="number" pInputText formControlName="quantidade" min="1" />
-          </div>
-          <div class="field col-12">
-            <label for="observacoes">Observações</label>
-            <textarea id="observacoes" formControlName="observacoes" rows="3" class="p-inputtext p-inputtext-fluid"></textarea>
-          </div>
-          <div class="actions">
-            <button pButton type="button" (click)="onSalvar()" [disabled]="confirmForm.invalid || !reservaSelecionada || !mesaSelecionada" class="p-button-sm"
-                    pTooltip="Salvar seleção" tooltipPosition="top">
-              <i class="pi pi-check mr-2"></i>
-              <span>Salvar</span>
-            </button>
-            <button pButton type="button" class="p-button-sm p-button-outlined" (click)="onLimparFormulario()"
-                    pTooltip="Limpar formulário" tooltipPosition="top">
-              <i class="pi pi-times mr-2"></i>
-              <span>Limpar</span>
-            </button>
-            
-          </div>
-        </form>
-        <div class="card" *ngIf="reservasDaMesa.length" style="margin-top:.75rem;">
-          <div class="section-header">
-            <i class="pi pi-users"></i>
-            <div>
-              <div class="title">Reservas nesta mesa</div>
-            </div>
-          </div>
-                    <div class="card-content" style="display:flex; flex-direction:column; gap:.25rem; padding:.5rem 0;">
-            <p-message *ngFor="let x of reservasDaMesa" severity="secondary">
-              <div style="display:flex; align-items:center; gap:.5rem; justify-content:space-between; width:100%">
-                <span>
-                  {{ x.nome_hospede || ("Reserva " + (x.numreserva || "")) }} —
-                  {{ (x.quantidade != null ? x.quantidade : x.reservas) || 0 }} lugar(es)
-                  <span *ngIf="x.coduh"> — UH {{ (x.coduh || "").trim() }}</span>
-                </span>
-                <button *ngIf="x === reservaMesaSelecionada" pButton type="button" class="p-button-text p-button-sm" (click)="onCancelarReservaMesa()">
-                  <i class="pi pi-ban mr-2"></i>
-                  <span>Cancelar</span>
-                </button>
-              </div>
-            </p-message>
-          </div>
-        </div>
-        
-        <!-- Segundo formulário: informações da reserva da mesa selecionada -->
-        <div class="reserva-info mesa" *ngIf="reservaMesaSelecionada" style="margin-top: .75rem;">
-          <div class="subtitle" style="font-weight:600; margin-bottom:.25rem;">Informações da reserva (mesa selecionada)</div>
-          <div class="form-grid">
-            <div class="field col-12">
-              <label>Hóspede</label>
-              <input pInputText [value]="reservaMesaSelecionada.nome_hospede || ''" readonly />
-            </div>
-            <div class="field">
-              <label>UH</label>
-              <input pInputText [value]="reservaMesaSelecionada.coduh || ''" readonly />
-            </div>
-            <div class="field">
-              <label>Lugares</label>
-              <input pInputText [value]="(reservaMesaSelecionada.quantidade ?? reservaMesaSelecionada.reservas) || 0" readonly />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="buttons-col">
-        <div class="filters" style="display:flex; gap:.75rem; align-items:center; flex-wrap: wrap; margin-bottom:.75rem;">
-          <label>Exibir:</label>
-          <select class="p-inputtext" [value]="mesaFilter" (change)="onMesaFilterChange($any($event.target).value)">
-            <option value="all">Todas</option>
-            <option value="empty">Somente vagas</option>
-            <option value="partial">Parcialmente vagas</option>
-            <option value="occupied">Somente ocupadas</option>
-          </select>
-          <span class="spacer" style="flex:1 1 auto"></span>
-          <label>Por vez:</label>
-          <select class="p-inputtext" [value]="mesaPageSize" (change)="onMesaPageSizeChange($any($event.target).value)">
-            <option *ngFor="let s of mesaPageSizeOptions" [value]="s">{{s}}</option>
-          </select>
-          <button pButton type="button" class="p-button-text p-button-sm" (click)="prevMesaPage()" [disabled]="mesaPage<=1">Anterior</button>
-          <span>Página {{mesaPage}} de {{ totalPaginasMesas() }}</span>
-          <button pButton type="button" class="p-button-text p-button-sm" (click)="nextMesaPage()" [disabled]="mesaPage>=totalPaginasMesas()">Próxima</button>
-        </div>
-        <div class="mesas-grid" *ngIf="mesasPagina.length; else mesasEmpty">
-          <button *ngFor="let m of mesasPagina; trackBy: trackByMesaItem"
-                  pButton type="button"
-                  class="mesa-btn p-button-outlined p-button-sm"
-                  [ngClass]="mesaClass(m)"
-                  (click)="onSelecionarMesa(m)"
-                  [pTooltip]="'Ocupados ' + m.ocupados + ' de ' + m.quantidadetotal" tooltipPosition="top">
-            Mesa {{ m.nummesa }} ({{ m.ocupados }}/{{ m.quantidadetotal }})
-          </button>
-        </div>
-        <ng-template #mesasEmpty>
-          <div class="empty"><i class="pi pi-inbox"></i><div>Nenhuma mesa disponível.</div></div>
-        </ng-template>
-      </div>
-    </div>
 </div>
-</div>
-
 
 
 

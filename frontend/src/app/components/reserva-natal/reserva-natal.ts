@@ -238,6 +238,18 @@ export class ReservaNatalComponent implements OnInit {
     this.reservaMesaSelecionada = null;
   }
 
+  reservaMesaLabel(x: { nome_hospede?: string; numreserva?: string; quantidade?: number; reservas?: number; coduh?: string }): string {
+    const nome = x?.nome_hospede || `Reserva ${x?.numreserva || ''}`.trim();
+    const qtd = (x?.quantidade != null ? x.quantidade : x?.reservas) || 0;
+    const uh = x?.coduh ? ` — UH ${x.coduh}` : '';
+    return `${nome} — ${qtd} lugar(es)${uh}`;
+  }
+
+  onExcluirReservaMesa(x: { idreservasfront?: number }) {
+    // TODO: integrar com endpoint de remoção quando disponível
+    this.onSelecionarReservaDaMesa(x);
+  }
+
   // Filtro e paginação de mesas
   aplicarFiltroMesas() {
     const f = this.mesaFilter;

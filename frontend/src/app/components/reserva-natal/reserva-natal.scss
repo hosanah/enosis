@@ -68,18 +68,39 @@
 /* 12-column layout for Mesas panel */
 .grid-12 {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 0.75rem;
+  align-items: start;
 }
 .form-col { grid-column: span 2; }
-.buttons-col { grid-column: span 10; }
+.buttons-col { grid-column: span 4; }
 
 @media (max-width: 1024px) {
-  .form-col { grid-column: span 3; }
-  .buttons-col { grid-column: span 9; }
+  /* mantém 2/4 em telas médias */
+  .form-col { grid-column: span 2; }
+  .buttons-col { grid-column: span 4; }
 }
-@media (max-width: 768px) {
+
+@media (max-width: 640px) {
+  /* empilha em telas pequenas */
   .grid-12 { grid-template-columns: repeat(6, 1fr); }
   .form-col { grid-column: span 6; }
   .buttons-col { grid-column: span 6; }
 }
+
+/* Garantir que ambos os cards apareçam */
+.reserva-natal.page > .card:last-of-type { display: block !important; }
+
+/* Evitar duplicidade: lista de reservas da mesa aparece só na coluna da direita */
+.form-col .reservas-mesa { display: none; }
+
+/* Oculta o painel duplicado (último card sem retrátil) */
+.reserva-natal.page > .card:last-of-type {
+  display: none;
+}
+/* Reserva da mesa list styling */
+.reservas-mesa-list { margin: 0; padding-left: 0; list-style: none; }
+.reserva-item { display: flex; align-items: center; gap: .5rem; margin: .25rem 0; }
+.reserva-item .p-message { flex: 1 1 auto; }
+.reserva-message-content { display:flex; align-items:center; gap:.5rem; }
+.reserva-message-text { flex:1 1 auto; }
