@@ -18,7 +18,6 @@ const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const usersRoutes = require('./routes/users');
 // Removed modules: restaurantes, eventos, reservas (CM), eventos-reservas, diretrizes
-const diretrizesRoutes = require('./routes/diretrizes');
 const configuracoesRoutes = require('./routes/configuracoes');
 const natalRoutes = require('./routes/natal.routes');
 
@@ -104,7 +103,6 @@ function requireDomainDb(req, res, next) {
 
 app.use('/dashboard', authenticateToken, dashboardRoutes);
 app.use('/users', authenticateToken, usersRoutes);
-app.use('/diretrizes', authenticateToken, diretrizesRoutes);
 // Removed routes: restaurantes, eventos, reservas (CM), eventos-reservas, diretrizes
 app.use('/configuracoes', authenticateToken, requireDomainDb, configuracoesRoutes);
 app.use('/natal', authenticateToken, requireDomainDb, natalRoutes);
@@ -153,4 +151,5 @@ process.on('SIGINT', () => {
 
 // Iniciar servidor
 startServer();
+
 

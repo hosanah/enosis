@@ -40,7 +40,18 @@ function initSchema() {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )`, (err) => {
         if (err) return reject(err);
-        resolve();
+        // Tabela de diretrizes (configurações controladas pelo admin)
+        db.run(`CREATE TABLE IF NOT EXISTS diretrizes (
+          code TEXT PRIMARY KEY,
+          nome TEXT NOT NULL,
+          descricao TEXT,
+          valor TEXT,
+          habilitado INTEGER DEFAULT 1,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`, (e2) => {
+          if (e2) return reject(e2);
+          resolve();
+        });
       });
     });
   });
@@ -92,4 +103,3 @@ module.exports = {
   initAuthDatabase,
   getAuthDb
 };
-

@@ -1,6 +1,7 @@
 ﻿const express = require('express');
 const router = express.Router();
 const { getOracle } = require('../config/oracle');
+const { getAuthDb } = require('../config/authdb');
 
 // GET /natal/reservas
 router.get('/reservas', async (req, res) => {
@@ -59,6 +60,49 @@ router.get('/reservas', async (req, res) => {
        WHERE ${conditions.join(' AND ')}`;
 
     const db = getOracle();
+    // Carregar diretrizes ativas (SQLite)
+    const authDb = getAuthDb();
+    const diretrizes = await new Promise((resolve, reject) => {
+      authDb.all('SELECT code, habilitado, valor FROM diretrizes', [], (err, rows) => {
+        if (err) return reject(err);
+        const map = {};
+        for (const r of rows || []) map[r.code] = { habilitado: !!r.habilitado, valor: r.valor };
+        resolve(map);
+      });
+    });
+
+    // Validação: máximo de itens por reserva
+    if (diretrizes['MAX_ITENS_POR_RESERVA']?.habilitado) {
+      const max = parseInt(diretrizes['MAX_ITENS_POR_RESERVA'].valor || '6', 10);
+      if (quantidade > max) {
+        return res.status(409).json({ error: `Quantidade solicitada excede o máximo permitido por reserva (${max}).`, maxPermitido: max });
+      }
+    }
+
+    // Validação: exigir reserva ativa (STATUSRESERVA = 2)
+    if (diretrizes['EXIGIR_RESERVA_ATIVA']?.habilitado) {
+      const stSql = 'SELECT STATUSRESERVA FROM CM.RESERVASFRONT WHERE IDRESERVASFRONT = ?';
+      const stRes = await db.query(stSql, [idreservasfront]);
+      const st = (stRes.rows && stRes.rows[0] && (stRes.rows[0].STATUSRESERVA ?? stRes.rows[0].statusreserva));
+      if (st !== 2) {
+        return res.status(422).json({ error: 'Reserva não está ativa para marcação de mesa.', code: 'RESERVA_INATIVA' });
+      }
+    }
+
+    // Validação: bloquear marcação em mesas distintas para mesma reserva
+    if (diretrizes['BLOQUEAR_RESERVA_REPETIDA']?.habilitado) {
+      const existsSql = `
+        SELECT COUNT(1) AS QTD
+          FROM CM.ENOMARCACAOITEM
+         WHERE IDRESERVASFRONT = ?
+           AND STATUS = 1
+           AND IDMARCACAOMESA <> ?`;
+      const exRes = await db.query(existsSql, [idreservasfront, idmarcacaomesa]);
+      const qtd = (exRes.rows && exRes.rows[0] && (exRes.rows[0].QTD ?? exRes.rows[0].qtd)) || 0;
+      if (qtd > 0) {
+        return res.status(409).json({ error: 'Reserva já possui marcação em outra mesa.', code: 'RESERVA_MESA_DIFERENTE' });
+      }
+    }
     const totalRes = await db.query(totalSql, params);
     const total = (totalRes.rows && totalRes.rows[0] && (totalRes.rows[0].TOTAL || totalRes.rows[0].total)) || 0;
 
