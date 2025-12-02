@@ -1,13 +1,13 @@
-﻿<div class="reserva-natal page">
-  <p-toast></p-toast>
-  <!-- Painel 1 â€“ Filtros de Reserva -->
+<div class="reserva-natal page">
+  <p-toast></p-toast>`n  <p-confirmDialog></p-confirmDialog>
+  <!-- Painel 1 – Filtros de Reserva -->
   <div class="card">
     <div class="section-header">
       <div class="left">
         <i class="pi pi-filter"></i>
         <div>
           <div class="title">Filtros de Reserva</div>
-          <div class="subtitle">Encontre a reserva pelo perí­odo, nome ou UH</div>
+          <div class="subtitle">Encontre a reserva pelo período, nome ou UH</div>
         </div>
       </div>
       <div class="actions">
@@ -32,12 +32,12 @@
         </div>
         <div class="field">
           <label for="nome">Nome</label>
-          <input id="nome" type="text" pInputText formControlName="nome" pTooltip="Nome completo do hÃ³spede"
+          <input id="nome" type="text" pInputText formControlName="nome" pTooltip="Nome completo do hóspede"
             tooltipPosition="top" />
         </div>
         <div class="field">
           <label for="coduh">Código da UH</label>
-          <input id="coduh" type="text" pInputText formControlName="coduh" pTooltip="Código da UH (quarto/suÃ­te)"
+          <input id="coduh" type="text" pInputText formControlName="coduh" pTooltip="Código da UH (quarto/suíte)"
             tooltipPosition="top" />
         </div>
         <div class="actions">
@@ -90,7 +90,7 @@
         </div>
       </ng-template>
     </div>
-  </div> <!-- Painel  Mesas + FormulÃ¡rio (12 colunas: 2 form, 10 botÃµes) -->
+  </div> <!-- Painel  Mesas + Formulário (12 colunas: 2 form, 10 botões) -->
   <div class="card">
     <div class="section-header">
       <i class="pi pi-table"></i>
@@ -164,8 +164,9 @@
                   Hospedes:</strong> {{ reservaSelecionada.total_hospedes ?? reservaSelecionada.qtd_hospedes }}</div>
             </div>
           </div>
+        </div>
 
-          <!-- Reservas vinculadas à mesa selecionada -->
+          <!-- Reservas vinculadas na mesa selecionada -->
           <div class="reserva-info" *ngIf="reservasDaMesa.length">
             <div class="subtitle" style="font-weight:600; margin-bottom:.5rem;">Reservas da mesa</div>
             <div class="reservas-mesa-list">
@@ -180,19 +181,18 @@
                     para {{ r.quantidade ?? r.reservas }} pessoa(s)
                   </div>
 
-                  <button pButton type="button" class="p-button-text p-button-sm"
+                  <button pButton type="button" class="p-button-sm"
                     (click)="onExcluirReservaMesa(r)">
                     Cancelar
                   </button>
+                  <button pButton type="button" class="p-button-sm p-button-secondary"
+                    icon="pi pi-print"
+                    (click)="onImprimirVoucherMesa(r)">
+                  </button>
                 </div>
-
               </p-message>
-
-
             </div>
           </div>
-        </div>
-
       </div>
       <div class="buttons-col">
         <div class="filters"
@@ -224,9 +224,11 @@
         </div>
         <ng-template #mesasEmpty>
           <div class="empty"><i class="pi pi-inbox"></i>
-            <div>Nenhuma mesa disponÃ­vel.</div>
+            <div>Nenhuma mesa disponível.</div>
           </div>
         </ng-template>
       </div>
     </div>
   </div>
+
+

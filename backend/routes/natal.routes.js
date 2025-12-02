@@ -120,7 +120,7 @@ router.get('/mesas/:id/reservas', async (req, res) => {
       return res.status(400).json({ error: 'ID de mesa inválido' });
     }
     const db = getOracle();
-    // Consulta solicitada para exibir reservas/apartamentos da mesa
+    // Consulta para exibir reservas/apartamentos da mesa com observação
     const sql = `
       SELECT 
           EI.IDMARCACAOMESA,
@@ -128,7 +128,8 @@ router.get('/mesas/:id/reservas', async (req, res) => {
           RF.CODUH,
           EM.NUMMESA,
           H.NOME || ' ' || H.SOBRENOME AS NOMECOMPLETO,
-          COUNT(EI.IDMARCACAOMESA) AS QUANTIDADE
+          COUNT(EI.IDMARCACAOITEM) AS QUANTIDADE,
+          MAX(EI.DESCRICAO) AS OBSERVACOES
         FROM CM.ENOMARCACAOITEM EI
         JOIN CM.ENOMARCACAOMESA EM ON EM.IDMARCACAOMESA = EI.IDMARCACAOMESA
         JOIN CM.RESERVASFRONT RF    ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
@@ -148,7 +149,8 @@ router.get('/mesas/:id/reservas', async (req, res) => {
       coduh: r.CODUH ?? r.coduh,
       nummesa: r.NUMMESA ?? r.nummesa,
       nome_hospede: r.NOMECOMPLETO ?? r.nomecompleto,
-      quantidade: r.QUANTIDADE ?? r.quantidade
+      quantidade: r.QUANTIDADE ?? r.quantidade,
+      observacoes: r.OBSERVACOES ?? r.observacoes ?? null
     }));
     res.json({ data });
   } catch (err) {

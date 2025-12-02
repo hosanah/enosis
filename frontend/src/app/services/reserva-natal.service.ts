@@ -46,7 +46,18 @@ export class ReservaNatalService {
   }
 
   getReservasPorMesa(idmarcacaomesa: number) {
-    return this.http.get<{ data: { idreservasfront: number; quantidade: number; numreserva: string; coduh: string; data_checkin?: string; data_checkout?: string; nome_hospede?: string }[] }>(`${this.API}/natal/mesas/${idmarcacaomesa}/reservas`);
+    return this.http.get<{
+      data: {
+        idreservasfront: number;
+        quantidade: number;
+        numreserva?: string;
+        coduh?: string;
+        data_checkin?: string;
+        data_checkout?: string;
+        nome_hospede?: string;
+        observacoes?: string | null;
+      }[];
+    }>(`${this.API}/natal/mesas/${idmarcacaomesa}/reservas`);
   }
 
   salvarMarcacao(payload: { idreservasfront: number; quantidade: number; idmarcacaomesa: number; observacao?: string }) {
