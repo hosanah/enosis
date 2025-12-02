@@ -34,6 +34,7 @@ export const routes: Routes = [
       { path: 'reserva-natal', loadComponent: () => import('./components/reserva-natal/reserva-natal').then(m => m.ReservaNatalComponent) },
       { path: 'reserva-ano-novo', loadComponent: () => import('./components/reserva-ano-novo/reserva-ano-novo').then(m => m.ReservaAnoNovoComponent) },
       { path: 'diretrizes', loadComponent: () => import('./components/diretrizes/diretrizes').then(m => m.DiretrizesComponent) },
+      { path: 'relatorios', loadComponent: () => import('./components/relatorios/relatorios').then(m => m.RelatoriosComponent) },
       
       
       

@@ -1,0 +1,44 @@
+<div class="relatorios page">
+  <div class="card">
+    <div class="header">
+      <h2>Relatórios de Mesas</h2>
+      <div class="subtitle">
+        Gere relatórios em PDF das marcações de mesas do Natal e Ano Novo.
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="relatorio-card">
+        <h3>Mesas por UH - Natal</h3>
+        <p>
+          Listagem de mesas marcadas por unidade habitacional (UH) para o
+          evento de Natal.
+        </p>
+        <button
+          pButton
+          type="button"
+          class="p-button-sm"
+          (click)="abrirRelatorioNatal()"
+        >
+          Abrir PDF
+        </button>
+      </div>
+
+      <div class="relatorio-card">
+        <h3>Mesas por UH - Ano Novo</h3>
+        <p>
+          Listagem de mesas marcadas por unidade habitacional (UH) para o
+          evento de Ano Novo.
+        </p>
+        <button
+          pButton
+          type="button"
+          class="p-button-sm"
+          (click)="abrirRelatorioAnoNovo()"
+        >
+          Abrir PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

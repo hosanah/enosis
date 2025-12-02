@@ -21,7 +21,9 @@ const usersRoutes = require('./routes/users');
 const diretrizesRoutes = require('./routes/diretrizes');
 const configuracoesRoutes = require('./routes/configuracoes');
 const natalRoutes = require('./routes/natal.routes');
+const natalRelatoriosRoutes = require('./routes/natal.relatorios');
 const anonovoRoutes = require('./routes/anonovo.routes');
+const anonovoRelatoriosRoutes = require('./routes/anonovo.relatorios');
 
 // Importar middleware de autenticação
 const { authenticateToken } = require('./middleware/auth');
@@ -109,7 +111,9 @@ app.use('/diretrizes', authenticateToken, diretrizesRoutes);
 // Removed routes: restaurantes, eventos, reservas (CM), eventos-reservas, diretrizes
 app.use('/configuracoes', authenticateToken, requireDomainDb, configuracoesRoutes);
 app.use('/natal', authenticateToken, requireDomainDb, natalRoutes);
+app.use('/natal/relatorios', authenticateToken, requireDomainDb, natalRelatoriosRoutes);
 app.use('/anonovo', authenticateToken, requireDomainDb, anonovoRoutes);
+app.use('/anonovo/relatorios', authenticateToken, requireDomainDb, anonovoRelatoriosRoutes);
 
 // Rota para servir arquivos estáticos (se necessário)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
