@@ -1,0 +1,75 @@
+<div class="user-form-container">
+  <p-toast></p-toast>
+
+  <p-card class="form-card">
+    <h2 class="text-xl font-semibold mb-4">{{ isEdit ? 'Editar Usuário' : 'Novo Usuário' }}</h2>
+
+    <form (ngSubmit)="onSubmit()" [formGroup]="form"class="flex flex-col gap-4">
+      
+      <div class="flex flex-col gap-2">
+        <label for="username">Usuário</label>
+        <input
+          pInputText
+          id="username"
+          name="username"
+          formControlName="username"
+          required
+          class="p-inputtext p-inputtext-fluid"
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="email">Email</label>
+        <input
+          pInputText
+          id="email"
+          name="email"
+          formControlName="email"
+          required
+          class="p-inputtext p-inputtext-fluid"
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="fullName">Nome Completo</label>
+        <input
+          pInputText
+          id="fullName"
+          name="fullName"
+          formControlName="fullName"
+          class="p-inputtext p-inputtext-fluid"
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="password">Senha</label>
+        <p-password
+          id="password"
+          name="password"
+          formControlName="password"
+          [feedback]="false"
+          placeholder="Senha"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [required]="!isEdit"
+        ></p-password>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <p-button
+          type="submit"
+          label="Salvar"
+          [disabled]="isLoading"
+          [loading]="isLoading"
+        ></p-button>
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          (onClick)="cancel()"
+          [text]="true"
+        ></p-button>
+      </div>
+
+    </form>
+  </p-card>
+</div>

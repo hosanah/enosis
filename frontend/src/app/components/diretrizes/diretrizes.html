@@ -1,0 +1,22 @@
+<p-card header="Diretrizes de Reserva de Mesa">
+  <p-table [value]="diretrizes" [loading]="loading" [paginator]="false" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Diretriz</th>
+        <th>Descrição</th>
+        <th>Ativo</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-d>
+      <tr>
+        <td>{{ d.nome }}</td>
+        <td>{{ d.descricao }}</td>
+        <td>
+          <p-toggleSwitch [ngModel]="!!d.habilitado" (onChange)="onToggle(d)"></p-toggleSwitch>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-card>
+
+<p-toast></p-toast>

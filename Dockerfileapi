@@ -1,0 +1,49 @@
+# Estágio de build
+FROM node:20-alpine AS builder
+
+# Instalar dependências necessárias para build
+RUN apk add --no-cache openssl openssl-dev lz4-libs lz4-dev musl-dev
+
+# Definir diretório de trabalho dentro do container
+WORKDIR /backend
+
+# Copiar arquivos de dependências
+COPY backend/package*.json ./
+
+# Instalar dependências
+RUN npm install
+
+# Copiar todo o código do backend
+COPY backend/ ./
+
+# Estágio de produção
+FROM node:20-alpine
+
+# Instalar apenas dependências mínimas para execução
+RUN apk add --no-cache openssl lz4-libs
+
+# Definir diretório de trabalho
+WORKDIR /backend
+
+# Copiar dependências e código do estágio anterior
+COPY --from=builder /backend/node_modules ./node_modules
+COPY --from=builder /backend/package*.json ./
+COPY --from=builder /backend/config ./config
+COPY --from=builder /backend/database ./database
+COPY --from=builder /backend/middleware ./middleware
+COPY --from=builder /backend/routes ./routes
+COPY --from=builder /backend/server.js ./
+COPY --from=builder /backend/swagger.json ./
+COPY --from=builder /backend/models ./models
+
+# Variáveis de ambiente padrão (podem ser sobrescritas)
+ENV PORT=3001 \
+    NODE_ENV="production"
+
+# Rodar como usuário seguro
+USER node
+
+EXPOSE 3001
+
+# Comando para iniciar a aplicação
+CMD ["npm", "start"]

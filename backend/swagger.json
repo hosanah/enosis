@@ -1,0 +1,1765 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Backend API",
+    "version": "1.0.0",
+    "description": "Documentação da API do backend"
+  },
+  "servers": [
+    {
+      "url": "https://tematicoapi.zapchatbr.com/",
+      "description": "API Temático"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Verificação de status do servidor"
+    },
+    {
+      "name": "Auth",
+      "description": "Autenticação de usuários"
+    },
+    {
+      "name": "Dashboard",
+      "description": "Operações do dashboard"
+    },
+    {
+      "name": "Users",
+      "description": "Gerenciamento de usuários"
+    },
+    {
+      "name": "Restaurantes",
+      "description": "Gerenciamento de restaurantes"
+    },
+    {
+      "name": "Diretrizes",
+      "description": "Gerenciamento de diretrizes"
+    },
+    {
+      "name": "Eventos",
+      "description": "Gerenciamento de eventos"
+    },
+    {
+      "name": "EventosReservas",
+      "description": "Operações de relacionamento evento-reserva"
+    },
+    {
+      "name": "Reservas",
+      "description": "Gerenciamento de reservas"
+    },
+    {
+      "name": "Configurações",
+      "description": "Gerenciamento das configurações do sistema"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Verificar status do servidor",
+        "responses": {
+          "200": {
+            "description": "Status de funcionamento do servidor"
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Autenticar usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso"
+          },
+          "401": {
+            "description": "Credenciais inválidas"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Renovar token de acesso usando refresh token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "refreshToken"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token renovado"
+          },
+          "401": {
+            "description": "Refresh token inválido"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout do usuário",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logout realizado com sucesso"
+          },
+          "401": {
+            "description": "Usuário não autorizado"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Registrar novo usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário criado"
+          },
+          "409": {
+            "description": "Usuário ou email já existe"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "summary": "Redefinir senha do usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Senha atualizada"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "summary": "Obter dados do dashboard",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do dashboard"
+          },
+          "401": {
+            "description": "Usuário não autorizado"
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "summary": "Obter estatísticas detalhadas",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estatísticas obtidas"
+          },
+          "401": {
+            "description": "Usuário não autorizado"
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/profile": {
+      "get": {
+        "summary": "Obter perfil do usuário",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil obtido"
+          },
+          "401": {
+            "description": "Usuário não autorizado"
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      },
+      "put": {
+        "summary": "Atualizar perfil do usuário",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil atualizado"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Usuário não autorizado"
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "Listar usuários",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de usuários"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "summary": "Criar usuário",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário criado"
+          },
+          "409": {
+            "description": "Usuário ou email já existe"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "summary": "Obter usuário pelo ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário encontrado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "put": {
+        "summary": "Atualizar usuário",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuário atualizado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "summary": "Desativar usuário",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário desativado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/restaurantes": {
+      "get": {
+        "summary": "Listar restaurantes",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de restaurantes"
+          }
+        },
+        "tags": [
+          "Restaurantes"
+        ]
+      },
+      "post": {
+        "summary": "Criar restaurante",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "capacidade": {
+                    "type": "integer"
+                  },
+                  "descricao": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "nome",
+                  "capacidade"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Restaurante criado"
+          }
+        },
+        "tags": [
+          "Restaurantes"
+        ]
+      }
+    },
+    "/restaurantes/{id}": {
+      "get": {
+        "summary": "Obter restaurante pelo ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restaurante encontrado"
+          },
+          "404": {
+            "description": "Restaurante não encontrado"
+          }
+        },
+        "tags": [
+          "Restaurantes"
+        ]
+      },
+      "put": {
+        "summary": "Atualizar restaurante",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "capacidade": {
+                    "type": "integer"
+                  },
+                  "descricao": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Restaurante atualizado"
+          },
+          "404": {
+            "description": "Restaurante não encontrado"
+          }
+        },
+        "tags": [
+          "Restaurantes"
+        ]
+      },
+      "delete": {
+        "summary": "Deletar restaurante",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restaurante deletado"
+          },
+          "404": {
+            "description": "Restaurante não encontrado"
+          }
+        },
+        "tags": [
+          "Restaurantes"
+        ]
+      }
+    },
+    "/diretrizes": {
+      "get": {
+        "summary": "Listar diretrizes",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Lista de diretrizes" }
+        },
+        "tags": [ "Diretrizes" ]
+      },
+      "post": {
+        "summary": "Criar diretriz",
+        "security": [ { "bearerAuth": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "descricao": { "type": "string" },
+                  "ativo": { "type": "boolean" }
+                },
+                "required": ["descricao"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Diretriz criada" }
+        },
+        "tags": [ "Diretrizes" ]
+      }
+    },
+    "/diretrizes/{id}": {
+      "get": {
+        "summary": "Obter diretriz pelo ID",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Diretriz encontrada" },
+          "404": { "description": "Diretriz não encontrada" }
+        },
+        "tags": [ "Diretrizes" ]
+      },
+      "put": {
+        "summary": "Atualizar diretriz",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "descricao": { "type": "string" },
+                  "ativo": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Diretriz atualizada" },
+          "404": { "description": "Diretriz não encontrada" }
+        },
+        "tags": [ "Diretrizes" ]
+      },
+      "delete": {
+        "summary": "Deletar diretriz",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Diretriz deletada" },
+          "404": { "description": "Diretriz não encontrada" }
+        },
+        "tags": [ "Diretrizes" ]
+      }
+    },
+    "/eventos": {
+      "get": {
+        "summary": "Listar eventos",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de eventos"
+          }
+        },
+        "tags": [
+          "Eventos"
+        ]
+      },
+      "post": {
+        "summary": "Criar evento",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "hora": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "restauranteId": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "nome",
+                  "data",
+                  "hora",
+                  "restauranteId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Evento criado"
+          }
+        },
+        "tags": [
+          "Eventos"
+        ]
+      }
+    },
+    "/eventos/disponiveis": {
+      "get": {
+        "summary": "Listar eventos disponíveis por data",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de eventos disponíveis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "disponibilidade": { "type": "boolean" },
+                      "restaurante": { "type": "string" },
+                      "vagas": { "type": "integer" },
+                      "id": { "type": "integer" },
+                      "nome": { "type": "string" },
+                      "hora": {
+                        "type": "string",
+                        "pattern": "^\\d{2}:\\d{2}$"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Data inválida" }
+        },
+        "tags": [ "Eventos" ]
+      }
+    },
+    "/eventos/{id}": {
+      "get": {
+        "summary": "Obter evento pelo ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evento encontrado"
+          },
+          "404": {
+            "description": "Evento não encontrado"
+          }
+        },
+        "tags": [
+          "Eventos"
+        ]
+      },
+      "put": {
+        "summary": "Atualizar evento",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "hora": {
+                    "type": "string"
+                  },
+                  "restauranteId": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento atualizado"
+          },
+          "404": {
+            "description": "Evento não encontrado"
+          }
+        },
+        "tags": [
+          "Eventos"
+        ]
+      },
+      "delete": {
+        "summary": "Deletar evento",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evento deletado"
+          },
+          "400": {
+            "description": "Evento possui reservas ativas"
+          },
+          "404": {
+            "description": "Evento não encontrado"
+          }
+        },
+        "tags": [
+          "Eventos"
+        ]
+      }
+    },
+    "/eventos/{id}/disponibilidade": {
+      "get": {
+        "summary": "Verificar disponibilidade do evento",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Disponibilidade retornada"
+          },
+          "404": {
+            "description": "Evento não encontrado"
+          }
+        },
+        "tags": [
+          "Eventos"
+        ]
+      }
+    },
+    "/eventos/{eventoId}/marcacoes/{reservaId}/status": {
+      "patch": {
+        "summary": "Atualizar status da marcação do evento",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "eventoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "reservaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status atualizado"
+          },
+          "404": {
+            "description": "Marcação não encontrada"
+          }
+        },
+        "tags": [
+          "Eventos"
+        ]
+      }
+    },
+    "/eventos-reservas": {
+      "get": {
+        "summary": "Listar marcações de eventos",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de marcações"
+          }
+        },
+        "tags": [
+          "EventosReservas"
+        ]
+      },
+      "post": {
+        "summary": "Criar marcação de evento",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "eventoId": {
+                    "type": "integer"
+                  },
+                  "reservaId": {
+                    "type": "integer"
+                  },
+                  "informacoes": {
+                    "type": "string"
+                  },
+                  "quantidade": {
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "eventoId",
+                  "reservaId",
+                  "quantidade"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Marcação criada"
+          }
+        },
+        "tags": [
+          "EventosReservas"
+        ]
+      }
+    },
+    "/eventos-reservas/{eventoId}/{reservaId}": {
+      "get": {
+        "summary": "Obter marcação específica",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "eventoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "reservaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marcação encontrada"
+          },
+          "404": {
+            "description": "Marcação não encontrada"
+          }
+        },
+        "tags": [
+          "EventosReservas"
+        ]
+      },
+      "put": {
+        "summary": "Atualizar marcação",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "eventoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "reservaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "informacoes": {
+                    "type": "string"
+                  },
+                  "quantidade": {
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Marcação atualizada"
+          },
+          "404": {
+            "description": "Marcação não encontrada"
+          }
+        },
+        "tags": [
+          "EventosReservas"
+        ]
+      },
+      "delete": {
+        "summary": "Remover marcação",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "eventoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "reservaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marcação removida"
+          },
+          "404": {
+            "description": "Marcação não encontrada"
+          }
+        },
+        "tags": [
+          "EventosReservas"
+        ]
+      }
+    },
+    "/reservas": {
+      "get": {
+        "summary": "Listar reservas",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "codigoUH",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hoje",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de reservas"
+          }
+        },
+        "tags": [
+          "Reservas"
+        ]
+      },
+      "post": {
+        "summary": "Criar reserva",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idreservacm": {
+                    "type": "integer"
+                  },
+                  "numeroreservacm": {
+                    "type": "string"
+                  },
+                  "coduh": {
+                    "type": "string"
+                  },
+                  "nome_hospede": {
+                    "type": "string"
+                  },
+                  "contato": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "data_checkin": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "data_checkout": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "qtd_hospedes": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "coduh",
+                  "nome_hospede",
+                  "contato",
+                  "email",
+                  "data_checkin",
+                  "data_checkout",
+                  "qtd_hospedes"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reserva criada"
+          }
+        },
+        "tags": [
+          "Reservas"
+        ]
+      }
+    },
+    "/reservas/buscar": {
+      "get": {
+        "summary": "Buscar reserva por coduh e período",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "coduh",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "checkin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "checkout",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reserva encontrada"
+          },
+          "404": {
+            "description": "Reserva não encontrada"
+          },
+          "409": {
+            "description": "Múltiplas reservas sobrepostas"
+          }
+        },
+        "tags": [
+          "Reservas"
+        ]
+      }
+    },
+    "/reservas/validate-coduh/{coduh}": {
+      "get": {
+        "summary": "Validar reserva ativa por coduh",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "coduh",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados da reserva e eventos relacionados"
+          },
+          "404": {
+            "description": "Reserva não encontrada"
+          }
+        },
+        "tags": [
+          "Reservas"
+        ]
+      }
+    },
+    "/reservas/{id}/marcacoes": {
+      "get": {
+        "summary": "Listar marcações de uma reserva",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de marcações"
+          },
+          "404": {
+            "description": "Reserva não encontrada"
+          }
+        },
+        "tags": [
+          "Reservas"
+        ]
+      }
+    },
+    "/reservas/{id}": {
+      "put": {
+        "summary": "Atualizar reserva",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idreservacm": {
+                    "type": "integer"
+                  },
+                  "numeroreservacm": {
+                    "type": "string"
+                  },
+                  "coduh": {
+                    "type": "string"
+                  },
+                  "nome_hospede": {
+                    "type": "string"
+                  },
+                  "contato": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "data_checkin": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "data_checkout": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "qtd_hospedes": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reserva atualizada"
+          },
+          "404": {
+            "description": "Reserva não encontrada"
+          }
+        },
+        "tags": [
+          "Reservas"
+        ]
+      },
+      "delete": {
+        "summary": "Deletar reserva",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reserva deletada"
+          },
+          "404": {
+            "description": "Reserva não encontrada"
+          }
+        },
+        "tags": [
+          "Reservas"
+        ]
+      }
+    }
+    ,
+    "/configuracoes": {
+      "get": {
+        "summary": "Obter configurações do sistema",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "responses": {
+          "200": { "description": "Configurações obtidas" }
+        },
+        "tags": [ "Configurações" ]
+      },
+      "put": {
+        "summary": "Atualizar configurações do sistema",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome_sistema": { "type": "string" },
+                  "webhook_whatsapp": { "type": "string" },
+                  "contato": { "type": "string" },
+                  "cnpj": { "type": "string" },
+                  "tempo_atualizacao_pms": { "type": "integer" },
+                  "nome_agenda_virtual": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Configurações atualizadas" }
+        },
+        "tags": [ "Configurações" ]
+      }
+    }
+  }
+}

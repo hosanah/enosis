@@ -1,0 +1,73 @@
+<div class="login-container">
+  <div class="content">
+    <div class="logo">
+      <div class="logo-circle">
+        <i class="pi pi-lock"></i>
+      </div>
+      <h1>Bem-vindo</h1>
+      <p>Faça login para acessar a aplicação</p>
+    </div>
+
+    <p-card class="login-card" contentStyleClass="no-padding">
+      <div class="card-content">
+        <form (ngSubmit)="onSubmit()" #loginForm="ngForm" novalidate class="form">
+          <div class="field">
+            <label for="username"><i class="pi pi-user mr-2"></i>Usuário ou Email</label>
+            <input
+              pInputText
+              id="username"
+              name="username"
+              [(ngModel)]="credentials.username"
+              required
+              type="text"
+              class="w-full"
+              inputStyleClass="w-full"
+              placeholder="Digite seu usuário ou email"
+              [disabled]="isLoading"
+            />
+          </div>
+
+          <div class="field">
+            <label for="password"><i class="pi pi-lock mr-2"></i>Senha</label>
+            <p-password
+              [(ngModel)]="credentials.password"
+              name="password"
+              required
+              [feedback]="false"
+              [toggleMask]="true"
+              placeholder="Digite sua senha"
+              styleClass="w-full"
+              inputStyleClass="w-full"
+              [disabled]="isLoading"
+            ></p-password>
+          </div>
+
+          <p-button
+            type="submit"
+            label="Entrar"
+            icon="pi pi-sign-in"
+            [loading]="isLoading"
+            [disabled]="!loginForm.valid || isLoading"
+            styleClass="w-full"
+          ></p-button>
+
+          <a routerLink="/reset-password" class="forgot-link">Esqueci minha senha</a>
+        </form>
+
+        <div class="info-box">
+          <h3><i class="pi pi-info-circle mr-1"></i>Credenciais de Teste</h3>
+          <div class="credentials">
+            <p><strong>Usuário:</strong> admin</p>
+            <p><strong>Senha:</strong> admin123</p>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <div class="footer">
+      <p>© 2025 Fullstack App. Desenvolvido por ZapchatBR</p>
+    </div>
+  </div>
+</div>
+
+<p-toast></p-toast>

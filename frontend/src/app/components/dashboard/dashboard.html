@@ -1,0 +1,157 @@
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Welcome Section -->
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">
+      Bem-vindo, {{ currentUser?.fullName || currentUser?.username }}! 👋
+    </h2>
+    <p class="text-gray-600">Aqui está um resumo das suas atividades e estatísticas do sistema.</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <p-card *ngFor="let stat of statsCards" styleClass="border border-gray-200 rounded-xl">
+      <div class="flex items-center justify-between p-6">
+        <div>
+          <p class="text-sm font-medium text-gray-600">{{ stat.title }}</p>
+          <p class="text-2xl font-bold text-gray-900">{{ stat.value }}</p>
+          <p class="text-xs text-gray-500 mt-1">{{ stat.subtitle }}</p>
+        </div>
+        <div class="p-3 rounded-full" [ngClass]="stat.iconBg">
+          <i [class]="stat.icon + ' text-xl'"></i>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Charts and Data Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- System Performance -->
+    <p-card styleClass="h-full border border-gray-200 rounded-xl">
+      <ng-template pTemplate="header">
+        <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 font-semibold text-gray-700">Performance do Sistema</div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="space-y-4 p-6">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm font-medium text-gray-700">CPU</span>
+              <span class="text-sm text-gray-500">{{ dashboardData?.charts?.systemPerformance?.cpu || 0 }}%</span>
+            </div>
+            <p-progressBar
+              [value]="dashboardData?.charts?.systemPerformance?.cpu || 0"
+              [style]="{'height': '8px'}"
+              styleClass="bg-gray-200 rounded-md"
+            ></p-progressBar>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm font-medium text-gray-700">Memória</span>
+              <span class="text-sm text-gray-500">{{ dashboardData?.charts?.systemPerformance?.memory || 0 }}%</span>
+            </div>
+            <p-progressBar
+              [value]="dashboardData?.charts?.systemPerformance?.memory || 0"
+              [style]="{'height': '8px'}"
+              styleClass="bg-gray-200 rounded-md"
+              severity="warning"
+            ></p-progressBar>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm font-medium text-gray-700">Disco</span>
+              <span class="text-sm text-gray-500">{{ dashboardData?.charts?.systemPerformance?.disk || 0 }}%</span>
+            </div>
+            <p-progressBar
+              [value]="dashboardData?.charts?.systemPerformance?.disk || 0"
+              [style]="{'height': '8px'}"
+              styleClass="bg-gray-200 rounded-md"
+              severity="success"
+            ></p-progressBar>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- Notifications -->
+    <p-card styleClass="h-full border border-gray-200 rounded-xl">
+      <ng-template pTemplate="header">
+        <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 font-semibold text-gray-700">Notificações</div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="space-y-3 p-6">
+          <div *ngFor="let notification of dashboardData?.notifications"
+               class="flex items-start space-x-3 p-3 rounded-lg border"
+               [ngClass]="{
+                 'bg-blue-50 border-blue-200': notification.type === 'info',
+                 'bg-green-50 border-green-200': notification.type === 'success',
+                 'bg-yellow-50 border-yellow-200': notification.type === 'warning',
+                 'bg-red-50 border-red-200': notification.type === 'error'
+               }">
+            <i [class]="getNotificationIcon(notification.type)"
+               [ngClass]="{
+                 'text-blue-600': notification.type === 'info',
+                 'text-green-600': notification.type === 'success',
+                 'text-yellow-600': notification.type === 'warning',
+                 'text-red-600': notification.type === 'error'
+               }"></i>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
+              <p class="text-xs text-gray-600">{{ notification.message }}</p>
+              <p class="text-xs text-gray-400 mt-1">{{ formatDate(notification.timestamp) }}</p>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <!-- Recent Activity Table -->
+  <p-card styleClass="border border-gray-200 rounded-xl">
+    <ng-template pTemplate="header">
+      <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 font-semibold text-gray-700">Atividade Recente</div>
+    </ng-template>
+    <ng-template pTemplate="content">
+      <p-table
+        [value]="dashboardData?.recentActivity || []"
+        [loading]="isLoading"
+        styleClass="w-full"
+        tableStyleClass="w-full"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">ID</th>
+            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">Ação</th>
+            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">Usuário</th>
+            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">Data/Hora</th>
+            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">Status</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-activity>
+          <tr>
+            <td class="border border-gray-200 p-4">{{ activity.id }}</td>
+            <td class="border border-gray-200 p-4">
+              <i class="pi pi-check-circle text-green-600 mr-2"></i>
+              {{ activity.action }}
+            </td>
+            <td class="border border-gray-200 p-4">{{ activity.user }}</td>
+            <td class="border border-gray-200 p-4">{{ formatDate(activity.timestamp) }}</td>
+            <td class="border border-gray-200 p-4">
+              <p-tag value="Sucesso" severity="success" styleClass="rounded-md font-medium"></p-tag>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center py-8 text-gray-500">
+              <i class="pi pi-info-circle mr-2"></i>
+              Nenhuma atividade encontrada
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ng-template>
+  </p-card>
+</main>
+
+<p-toast></p-toast>
