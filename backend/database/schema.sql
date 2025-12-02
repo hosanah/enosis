@@ -1,4 +1,4 @@
--- Schema for PostgreSQL database
+﻿-- Schema for PostgreSQL database
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(255) UNIQUE NOT NULL,
@@ -23,18 +23,14 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE TABLE IF NOT EXISTS regras_validacao (
   id SERIAL PRIMARY KEY,
-  chave VARCHAR(50) UNIQUE NOT NULL,
+  chave VARCHAR(80) UNIQUE NOT NULL,
   descricao TEXT NOT NULL,
   ativo BOOLEAN DEFAULT TRUE
 );
 
 INSERT INTO regras_validacao (chave, descricao, ativo) VALUES
-  ('QUANTIDADE_RESERVA', 'Quantidade não pode exceder número de hóspedes da reserva', TRUE),
-  ('CAPACIDADE_EVENTO', 'Total de participantes não pode ultrapassar capacidade do restaurante', TRUE),
-  ('MARCACAO_DUPLICADA_EVENTO_RESERVA', 'Não permitir mais de uma marcação ativa para o mesmo evento e reserva', TRUE),
-  ('HOSPEDE_DUPLICADO_EVENTO', 'Um hóspede não pode ter mais de uma marcação ativa para o mesmo evento', TRUE),
-  ('RESERVA_DUPLICADA_DIA', 'A reserva não pode ser vinculada a outro evento na mesma data', TRUE),
-  ('LIMITE_MARCACOES_ESTADIA', 'Limite de marcações conforme duração da estadia', TRUE)
+  ('PERMITIR_QUANTIDADE_MAIOR_HOSPEDES', 'Permite cadastro de reserva com número informado maior que número de hóspedes no apartamento', TRUE),
+  ('PERMITIR_APTO_MULTI_RESERVAS', 'Permitir o mesmo apartamento marcar duas ou mais reservas', TRUE)
 ON CONFLICT (chave) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS configuracoes (

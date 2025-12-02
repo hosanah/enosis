@@ -1,19 +1,27 @@
-<div class="reserva-natal page">
-  <p-toast></p-toast>  <p-confirmDialog></p-confirmDialog>
+<div class="reserva-ano-novo page">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
   <!-- Painel 1 – Filtros de Reserva -->
   <div class="card">
     <div class="section-header">
       <div class="left">
         <i class="pi pi-filter"></i>
         <div>
-          <div class="title">Filtros de Reserva</div>
-          <div class="subtitle">Encontre a reserva pelo período, nome ou UH</div>
+          <div class="title">Filtros de Reserva - Ano Novo</div>
+          <div class="subtitle">
+            Encontre a reserva pelo período, nome ou UH
+          </div>
         </div>
       </div>
       <div class="actions">
         <button pButton type="button" class="p-button-text p-button-rounded p-button-sm" (click)="toggleFiltros()"
-          [pTooltip]="isFiltrosCollapsed ? 'Expandir filtros' : 'Colapsar filtros'" tooltipPosition="left">
-          <i class="pi" [ngClass]="isFiltrosCollapsed ? 'pi-chevron-down' : 'pi-chevron-up'"></i>
+          [pTooltip]="
+            isFiltrosCollapsed ? 'Expandir filtros' : 'Colapsar filtros'
+          " tooltipPosition="left">
+          <i class="pi" [ngClass]="
+              isFiltrosCollapsed ? 'pi-chevron-down' : 'pi-chevron-up'
+            "></i>
         </button>
       </div>
     </div>
@@ -56,7 +64,7 @@
       </form>
 
       <div class="mt-4" *ngIf="reservasFiltradas.length; else emptyState">
-        <p-table [value]="reservasFiltradas" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]"
+        <p-table [value]="reservasFiltradas" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]"
           responsiveLayout="scroll">
           <ng-template pTemplate="header">
             <tr>
@@ -64,7 +72,7 @@
               <th>Código UH</th>
               <th>Check-in</th>
               <th>Check-out</th>
-              <th>Hospedes</th>
+              <th>Hóspedes</th>
               <th style="width: 1%">Ações</th>
             </tr>
           </ng-template>
@@ -76,8 +84,9 @@
               <td>{{ r.data_checkout | date: 'dd/MM/yyyy' }}</td>
               <td>{{ r.total_hospedes ?? r.qtd_hospedes ?? '-' }}</td>
               <td>
-                <button pButton type="button" (click)="onSelecionarReserva(r)"
-                  class="p-button-sm p-button-outlined">Selecionar Reserva</button>
+                <button pButton type="button" (click)="onSelecionarReserva(r)" class="p-button-sm p-button-outlined">
+                  Selecionar Reserva
+                </button>
               </td>
             </tr>
           </ng-template>
@@ -86,16 +95,20 @@
       <ng-template #emptyState>
         <div class="empty">
           <i class="pi pi-search"></i>
-          <div>Nenhuma reserva encontrada. Ajuste os filtros e tente novamente.</div>
+          <div>
+            Nenhuma reserva encontrada. Ajuste os filtros e tente novamente.
+          </div>
         </div>
       </ng-template>
     </div>
-  </div> <!-- Painel  Mesas + Formulário (12 colunas: 2 form, 10 botões) -->
+  </div>
+
+  <!-- Painel Mesas + Formulário -->
   <div class="card">
     <div class="section-header">
       <i class="pi pi-table"></i>
       <div>
-        <div class="title">Mesas</div>
+        <div class="title">Mesas Ano Novo</div>
       </div>
       <div class="actions">
         <button pButton type="button" class="p-button-text p-button-rounded p-button-sm" (click)="toggleMesas()"
@@ -109,94 +122,130 @@
         <form [formGroup]="confirmForm" class="form-grid">
           <div class="field col-12">
             <label>Reserva selecionada</label>
-            <div style="display:flex; gap:.5rem; align-items:center;">
-              <input pInputText [value]="reservaSelecionadaTexto" readonly pTooltip="Defina uma reserva na lista acima"
-                tooltipPosition="top" />
+            <div style="display: flex; gap: 0.5rem; align-items: center">
+              <input type="text" pInputText [disabled]="true" [value]="reservaSelecionadaTexto" />
               <button pButton type="button" class="p-button-text p-button-sm" (click)="onLimparReserva()"
                 [disabled]="!reservaSelecionada">
                 Limpar
               </button>
             </div>
           </div>
+
           <div class="field col-12">
             <label>Mesa selecionada</label>
-            <div style="display:flex; gap:.5rem; align-items:center;">
-              <input pInputText [value]="mesaSelecionada || ''" readonly pTooltip="Selecione uma mesa ao lado"
-                tooltipPosition="top" />
+            <div style="display: flex; gap: 0.5rem; align-items: center">
+              <input type="text" pInputText [disabled]="true" [value]="mesaSelecionada || ''" />
               <button pButton type="button" class="p-button-text p-button-sm" (click)="onLimparMesa()"
                 [disabled]="!mesaSelecionada">
                 Limpar
               </button>
             </div>
           </div>
+
           <div class="field">
             <label for="quantidade">Quantidade</label>
-            <input id="quantidade" type="number" pInputText formControlName="quantidade" min="1" />
+            <input id="quantidade" type="number" pInputText formControlName="quantidade"
+              pTooltip="Quantidade de lugares a reservar na mesa" tooltipPosition="top" />
           </div>
+
           <div class="field col-12">
             <label for="observacoes">Observações</label>
-            <textarea id="observacoes" formControlName="observacoes" rows="3"
-              class="p-inputtext p-inputtext-fluid"></textarea>
+            <textarea id="observacoes" rows="3" pInputText formControlName="observacoes"
+              pTooltip="Observações adicionais (ex: preferências, restrições)" tooltipPosition="top"></textarea>
           </div>
-          <div class="actions">
-            <button pButton type="button" (click)="onSalvar()"
-              [disabled]="confirmForm.invalid || !reservaSelecionada || !mesaSelecionada" class="p-button-sm"
-              pTooltip="Salvar seleção" tooltipPosition="top">
+
+          <div class="field col-12" style="text-align: right">
+            <button pButton type="button" (click)="onSalvar()" [disabled]="!reservaSelecionada || !mesaSelecionada"
+              class="p-button-sm" pTooltip="Salvar seleção" tooltipPosition="top">
               <i class="pi pi-check mr-2"></i>
               <span>Salvar</span>
             </button>
           </div>
         </form>
 
-        <div class="info-grid"
-          style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:.75rem; margin-top:.75rem;">
+        <div class="info-grid" style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+          ">
           <!-- Informações da reserva selecionada -->
           <div class="reserva-info" *ngIf="reservaSelecionada">
-            <div class="subtitle" style="font-weight:600; margin-bottom:.25rem;">Informações da reserva</div>
-            <div class="grid" style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.5rem;">
-              <div><strong>Hóspede:</strong> {{ reservaSelecionada.nome_hospede }}</div>
+            <div class="subtitle" style="font-weight: 600; margin-bottom: 0.25rem">
+              Informações da reserva
+            </div>
+            <div class="grid" style="
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.5rem;
+              ">
+              <div>
+                <strong>Hóspede:</strong> {{ reservaSelecionada.nome_hospede }}
+              </div>
               <div><strong>UH:</strong> {{ reservaSelecionada.coduh }}</div>
-              <div><strong>Check-in:</strong> {{ reservaSelecionada.data_checkin | date:'dd/MM/yyyy' }}</div>
-              <div><strong>Check-out:</strong> {{ reservaSelecionada.data_checkout | date:'dd/MM/yyyy' }}</div>
-              <div *ngIf="reservaSelecionada.numreserva"><strong>Nº Reserva:</strong> {{ reservaSelecionada.numreserva
-                }}</div>
-              <div *ngIf="(reservaSelecionada.total_hospedes ?? reservaSelecionada.qtd_hospedes) != null"><strong>Qtde
-                  Hospedes:</strong> {{ reservaSelecionada.total_hospedes ?? reservaSelecionada.qtd_hospedes }}</div>
+              <div>
+                <strong>Check-in:</strong>
+                {{ reservaSelecionada.data_checkin | date: 'dd/MM/yyyy' }}
+              </div>
+              <div>
+                <strong>Check-out:</strong>
+                {{ reservaSelecionada.data_checkout | date: 'dd/MM/yyyy' }}
+              </div>
+              <div *ngIf="reservaSelecionada.numreserva">
+                <strong>Nº Reserva:</strong> {{ reservaSelecionada.numreserva }}
+              </div>
+              <div *ngIf="
+                  (reservaSelecionada.total_hospedes ??
+                    reservaSelecionada.qtd_hospedes) != null
+                ">
+                <strong>Qtde Hospedes:</strong>
+                {{
+                reservaSelecionada.total_hospedes ??
+                reservaSelecionada.qtd_hospedes
+                }}
+              </div>
             </div>
           </div>
         </div>
 
-          <!-- Reservas vinculadas na mesa selecionada -->
-          <div class="reserva-info" *ngIf="reservasDaMesa.length">
-            <div class="subtitle" style="font-weight:600; margin-bottom:.5rem;">Reservas da mesa</div>
-            <div class="reservas-mesa-list">
-              <p-message *ngFor="let r of reservasDaMesa; trackBy: trackByMesaItem" severity="secondary"
-                class="reserva-item">
-
-                <div class="reserva-message-content">
-                  <div class="reserva-message-text">
-                    <strong>Reserva para:</strong>
-                    {{ r.nome_hospede || ('Reserva ' + (r.numreserva || '')) }}
-                    - {{ r.coduh || 'UH não informada' }}
-                    para {{ r.quantidade ?? r.reservas }} pessoa(s)
-                  </div>
-
-                  <button pButton type="button" class="p-button-sm"
-                    (click)="onExcluirReservaMesa(r)">
-                    Cancelar
-                  </button>
-                  <button pButton type="button" class="p-button-sm p-button-secondary"
-                    icon="pi pi-print"
-                    (click)="onImprimirVoucherMesa(r)">
-                  </button>
-                </div>
-              </p-message>
-            </div>
+        <!-- Reservas vinculadas na mesa selecionada -->
+        <div class="reserva-info" *ngIf="reservasDaMesa.length">
+          <div class="subtitle" style="font-weight: 600; margin-bottom: 0.5rem">
+            Reservas da mesa
           </div>
+          <div class="reservas-mesa-list">
+            <p-message *ngFor="let r of reservasDaMesa; trackBy: trackByMesaItem" severity="secondary"
+              class="reserva-item">
+              <div class="reserva-message-content">
+                <div class="reserva-message-text">
+                  <strong>Reserva para:</strong>
+                  {{
+                  r.nome_hospede || ('Reserva ' + (r.numreserva || ''))
+                  }}
+                  - {{ r.coduh || 'UH não informada' }} para
+                  {{ r.quantidade ?? r.reservas }} pessoa(s)
+                </div>
+
+                <button pButton type="button" class="p-button-sm" (click)="onExcluirReservaMesa(r)">
+                  Cancelar
+                </button>
+                <button pButton type="button" class="p-button-sm p-button-secondary" icon="pi pi-print"
+                  (click)="onImprimirVoucherMesa(r)">
+                </button>
+              </div>
+            </p-message>
+          </div>
+        </div>
       </div>
+
       <div class="buttons-col">
-        <div class="filters"
-          style="display:flex; gap:.75rem; align-items:center; flex-wrap: wrap; margin-bottom:.75rem;">
+        <div class="filters" style="
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+          ">
           <label>Exibir:</label>
           <select class="p-inputtext" [value]="mesaFilter" (change)="onMesaFilterChange($any($event.target).value)">
             <option value="all">Todas</option>
@@ -204,17 +253,24 @@
             <option value="partial">Parcialmente vagas</option>
             <option value="occupied">Somente ocupadas</option>
           </select>
-          <span class="spacer" style="flex:1 1 auto"></span>
+          <span class="spacer" style="flex: 1 1 auto"></span>
           <label>Por vez:</label>
           <select class="p-inputtext" [value]="mesaPageSize" (change)="onMesaPageSizeChange($any($event.target).value)">
-            <option *ngFor="let s of mesaPageSizeOptions" [value]="s">{{s}}</option>
+            <option *ngFor="let s of mesaPageSizeOptions" [value]="s">
+              {{ s }}
+            </option>
           </select>
           <button pButton type="button" class="p-button-text p-button-sm" (click)="prevMesaPage()"
-            [disabled]="mesaPage<=1">Anterior</button>
-          <span>Página {{mesaPage}} de {{ totalPaginasMesas() }}</span>
+            [disabled]="mesaPage <= 1">
+            Anterior
+          </button>
+          <span>Página {{ mesaPage }} de {{ totalPaginasMesas() }}</span>
           <button pButton type="button" class="p-button-text p-button-sm" (click)="nextMesaPage()"
-            [disabled]="mesaPage>=totalPaginasMesas()">Próxima</button>
+            [disabled]="mesaPage >= totalPaginasMesas()">
+            Próxima
+          </button>
         </div>
+
         <div class="mesas-grid" *ngIf="mesasPagina.length; else mesasEmpty">
           <button *ngFor="let m of mesasPagina; trackBy: trackByMesaItem" pButton type="button"
             class="mesa-btn p-button-outlined p-button-sm" [ngClass]="mesaClass(m)" (click)="onSelecionarMesa(m)"
@@ -223,12 +279,12 @@
           </button>
         </div>
         <ng-template #mesasEmpty>
-          <div class="empty"><i class="pi pi-inbox"></i>
+          <div class="empty">
+            <i class="pi pi-inbox"></i>
             <div>Nenhuma mesa disponível.</div>
           </div>
         </ng-template>
       </div>
     </div>
   </div>
-
-
+</div>

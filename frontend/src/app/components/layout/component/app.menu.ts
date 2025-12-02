@@ -28,6 +28,7 @@ export class AppMenu {
         label: 'Operacional',
         items: [
           { label: 'Reserva Natal', icon: 'pi pi-fw pi-gift', routerLink: ['/reserva-natal'] },
+          { label: 'Reserva Ano Novo', icon: 'pi pi-fw pi-calendar', routerLink: ['/reserva-ano-novo'] },
           { label: 'Diretrizes', icon: 'pi pi-fw pi-cog', routerLink: ['/diretrizes'] }
         ]
       },

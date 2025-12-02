@@ -1,0 +1,151 @@
+.reserva-natal.page { display: grid; gap: 1rem; }
+
+.reserva-natal .card {
+  background: var(--surface-card, #fff);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .75rem; }
+.section-header .left { display: flex; gap: .75rem; align-items: center; }
+.section-header .title { font-weight: 600; font-size: 1.1rem; }
+.section-header .subtitle { color: var(--text-color-secondary, #6b7280); font-size: .9rem; }
+.section-header .pi { color: var(--primary-color, #3b82f6); font-size: 1.2rem; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1rem;
+}
+
+.form-grid .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-grid .field.col-12 {
+  grid-column: 1 / -1;
+}
+
+.actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.5rem;
+  margin-top: .25rem;
+}
+.actions .spacer { flex: 1; }
+
+.mesas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.35rem;
+}
+
+.mesa-btn { height: 32px; font-size: .85rem; padding: .25rem .5rem; }
+.mesas-grid button.selected {
+  box-shadow: 0 0 0 2px var(--primary-color) inset;
+  transform: translateY(-1px);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem;
+  color: var(--text-color-secondary, #6b7280);
+}
+.empty .pi { color: var(--text-color-secondary, #6b7280); }
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* 12-column layout for Mesas panel */
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+.form-col { grid-column: span 2; }
+.buttons-col { grid-column: span 4; }
+
+@media (max-width: 1024px) {
+  /* mantém 2/4 em telas médias */
+  .form-col { grid-column: span 2; }
+  .buttons-col { grid-column: span 4; }
+}
+
+@media (max-width: 640px) {
+  /* empilha em telas pequenas */
+  .grid-12 { grid-template-columns: repeat(6, 1fr); }
+  .form-col { grid-column: span 6; }
+  .buttons-col { grid-column: span 6; }
+}
+
+/* Garantir que ambos os cards apareçam */
+.reserva-natal.page > .card:last-of-type { display: block !important; }
+
+/* Evitar duplicidade: lista de reservas da mesa aparece só na coluna da direita */
+.form-col .reservas-mesa { display: none; }
+
+/* Oculta o painel duplicado (último card sem retrátil) */
+.reserva-natal.page > .card:last-of-type {
+  display: none;
+}
+/* Reserva da mesa list styling */
+.reservas-mesa-list { margin: 0; padding-left: 0; list-style: none; }
+.reserva-item { display: flex; align-items: center; gap: .5rem; margin: .25rem 0; }
+.reserva-item .p-message { flex: 1 1 auto; }
+.reserva-message-content { display:flex; align-items:center; gap:.5rem; }
+.reserva-message-text { flex:1 1 auto; }
+
+.voucher-card {
+  padding: 10px;
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.voucher-title {
+  font-size: 1rem;
+  margin: 0;
+  text-align: center;
+}
+
+.voucher-field {
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.voucher-print-btn {
+  margin-top: 10px;
+  width: 100%;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .voucher-card,
+  .voucher-card * {
+    visibility: visible;
+  }
+
+  .voucher-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 260px !important;
+  }
+
+  .voucher-print-btn {
+    display: none;
+  }
+}

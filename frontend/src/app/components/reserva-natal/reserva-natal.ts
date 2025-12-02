@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
@@ -158,7 +158,7 @@ export class ReservaNatalComponent implements OnInit {
         } else {
           this.messageService.add({
             severity: 'success',
-            summary: 'Busca concluída',
+            summary: 'Busca concluÃ­da',
             detail: `${this.reservas.length} reserva(s) encontrada(s).`
           });
         }
@@ -241,7 +241,7 @@ export class ReservaNatalComponent implements OnInit {
 
     this.confirmationService.confirm({
       header: 'Cancelar reserva da mesa',
-      message: 'Esta ação é irreversvel. Deseja realmente cancelar a reserva desta mesa?',
+      message: 'Esta ação não irreversvel. Deseja realmente cancelar a reserva desta mesa?',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sim, cancelar',
       rejectLabel: 'Não',
@@ -304,7 +304,7 @@ export class ReservaNatalComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Impressão',
-        detail: 'Não foi possível abrir a janela de impressão.'
+        detail: 'Não foi possí­vel abrir a janela de impressão.'
       });
       return;
     }
@@ -465,28 +465,49 @@ export class ReservaNatalComponent implements OnInit {
     }
   }
 
-  onSalvar(): void {
-    if (!this.reservaSelecionada || !this.mesaSelecionada || this.confirmForm.invalid) return;
-    if (!this.mesaSelecionadaId) {
-      this.messageService.add({ severity: 'warn', summary: 'Mesa', detail: 'Selecione uma mesa.' });
+
+    onSalvar(): void {
+    const r = this.reservaSelecionada as Reserva;
+    if (!r || !this.mesaSelecionada || this.confirmForm.invalid) {
       return;
     }
+    if (!this.mesaSelecionadaId) {
+      this.messageService.add({
+        severity: "warn",
+        summary: "Mesa",
+        detail: "Selecione uma mesa."
+      });
+      return;
+    }
+
     const payload = {
-      idreservasfront: this.reservaSelecionada.id,
+      idreservasfront: r.id,
       quantidade: Number(this.confirmForm.value.quantidade || 0),
       idmarcacaomesa: this.mesaSelecionadaId,
-      observacao: String(this.confirmForm.value.observacoes || '') || undefined
+      observacao: String(this.confirmForm.value.observacoes || "") || undefined
     };
+
     this.service.salvarMarcacao(payload).subscribe({
       next: (res) => {
         this.messageService.add({
-          severity: 'success',
-          summary: 'Salvo',
-          detail: `Marcaçãoo salva (${res.atualizados}/${res.solicitados}).`
+          severity: "success",
+          summary: "Salvo",
+          detail: `Marcacao salva (${res.atualizados}/${res.solicitados}).`
         });
+
+        const itemVoucher: ReservaMesa = {
+          idreservasfront: r.id,
+          quantidade: Number(this.confirmForm.value.quantidade || 0),
+          numreserva: r.numreserva,
+          coduh: r.coduh,
+          nome_hospede: r.nome_hospede,
+          observacoes: String(this.confirmForm.value.observacoes || "")
+        };
+        this.onImprimirVoucherMesa(itemVoucher);
+
         this.carregarMesas();
-        this.filtroForm.reset({ dataCheckin: null, dataCheckout: null, nome: '', coduh: '' });
-        this.confirmForm.reset({ quantidade: 1, observacoes: '' });
+        this.filtroForm.reset({ dataCheckin: null, dataCheckout: null, nome: "", coduh: "" });
+        this.confirmForm.reset({ quantidade: 1, observacoes: "" });
         this.reservas = [];
         this.reservasFiltradas = [];
         this.reservaSelecionada = null;
@@ -497,13 +518,11 @@ export class ReservaNatalComponent implements OnInit {
         this.reservaMesaSelecionada = null;
       },
       error: (err) => {
-        const msg = err?.error?.error || 'Falha ao salvar marcação.';
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: msg });
+        const msg = err?.error?.error || "Falha ao salvar marcacao.";
+        this.messageService.add({ severity: "error", summary: "Erro", detail: msg });
       }
     });
-  }
-
-  onLimpar(): void {
+  }  onLimpar(): void {
     this.filtroForm.reset({ dataCheckin: null, dataCheckout: null, nome: '', coduh: '' });
     this.reservas = [];
     this.reservasFiltradas = [];
@@ -522,9 +541,13 @@ export class ReservaNatalComponent implements OnInit {
   }
 
   imprimirVoucher(): void {
-    // Mantido para compatibilidade futura; impressão é feita em onImprimirVoucherMesa.
     window.print();
   }
 }
+
+
+
+
+
 
 

@@ -1,32 +1,39 @@
-const { getAuthDb } = require('./authdb');
+﻿const defaults = [
+  {
+    code: 'PERMITIR_QUANTIDADE_MAIOR_HOSPEDES',
+    nome: 'Permite cadastro de reserva com número informado maior que número de hóspedes no apartamento',
+    descricao:
+      'Quando habilitada, permite marcar quantidade de lugares maior do que o número de hóspedes da reserva.',
+    valor: 'true',
+    habilitado: 1
+  },
+  {
+    code: 'PERMITIR_APTO_MULTI_RESERVAS',
+    nome: 'Permitir o mesmo apartamento marcar duas ou mais reservas',
+    descricao:
+      'Quando habilitada, permite que o mesmo apartamento esteja vinculado a mais de uma reserva/evento.',
+    valor: 'true',
+    habilitado: 1
+  }
+];
 
-async function seedDiretrizes() {
-  const db = getAuthDb();
-  // cria registros padrão apenas se não existirem
-  const defaults = [
-    {
-      code: 'MAX_ITENS_POR_RESERVA',
-      nome: 'Máximo de itens por reserva',
-      descricao: 'Quantidade máxima de lugares que uma única reserva pode marcar em uma mesa.',
-      valor: '6',
-      habilitado: 1
-    },
-    {
-      code: 'EXIGIR_RESERVA_ATIVA',
-      nome: 'Exigir reserva ativa',
-      descricao: 'Apenas reservas com status ativo/pago podem marcar mesa.',
-      valor: 'true',
-      habilitado: 1
-    },
-    {
-      code: 'BLOQUEAR_RESERVA_REPETIDA',
-      nome: 'Bloquear reserva repetida em mesas distintas',
-      descricao: 'Impede que a mesma reserva marque lugares em mais de uma mesa diferente.',
-      valor: 'true',
-      habilitado: 1
-    }
-  ];
+async function seedDiretrizes(db) {
+  if (!db || typeof db.run !== 'function') {
+    throw new Error('seedDiretrizes requer uma instância de banco com método run(sql, params, cb)');
+  }
 
+  const allowedCodes = defaults.map((d) => d.code);
+
+  // remove quaisquer diretrizes antigas que não façam parte do conjunto fixo
+  await new Promise((resolve, reject) => {
+    db.run(
+      'DELETE FROM diretrizes WHERE code NOT IN (?, ?)',
+      allowedCodes,
+      (err) => (err ? reject(err) : resolve())
+    );
+  });
+
+  // garante existência das diretrizes fixas
   for (const d of defaults) {
     await new Promise((resolve, reject) => {
       db.run(
@@ -39,4 +46,3 @@ async function seedDiretrizes() {
 }
 
 module.exports = { seedDiretrizes };
-

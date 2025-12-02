@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getAuthDb } = require('../config/authdb');
 
-// Lista diretrizes; se vazio, cria padrÃµes
+// Lista diretrizes; se vazio, cria padrões
 router.get('/', async (req, res) => {
   try {
     const db = getAuthDb();
@@ -16,23 +16,16 @@ router.get('/', async (req, res) => {
     if (!list || list.length === 0) {
       const defaults = [
         {
-          code: 'MAX_ITENS_POR_RESERVA',
-          nome: 'MÃ¡ximo de itens por reserva',
-          descricao: 'Quantidade mÃ¡xima de lugares que uma Ãºnica reserva pode marcar em uma mesa.',
-          valor: '6',
-          habilitado: 1
-        },
-        {
-          code: 'EXIGIR_RESERVA_ATIVA',
-          nome: 'Exigir reserva ativa',
-          descricao: 'Apenas reservas com status ativo/pago podem marcar mesa.',
+          code: 'PERMITIR_QUANTIDADE_MAIOR_HOSPEDES',
+          nome: 'Permite cadastro de reserva com número informado maior que número de hóspedes no apartamento',
+          descricao: 'Quando habilitada, permite marcar quantidade de lugares maior do que o número de hóspedes da reserva.',
           valor: 'true',
           habilitado: 1
         },
         {
-          code: 'BLOQUEAR_RESERVA_REPETIDA',
-          nome: 'Bloquear reserva repetida em mesas distintas',
-          descricao: 'Impede que a mesma reserva marque lugares em mais de uma mesa diferente.',
+          code: 'PERMITIR_APTO_MULTI_RESERVAS',
+          nome: 'Permitir o mesmo apartamento marcar duas ou mais reservas',
+          descricao: 'Quando habilitada, permite que o mesmo apartamento esteja vinculado a mais de uma reserva/evento.',
           valor: 'true',
           habilitado: 1
         }
@@ -47,6 +40,19 @@ router.get('/', async (req, res) => {
         });
       }
     }
+
+    // Garante que só as duas diretrizes desejadas existam
+    const allowedCodes = [
+      'PERMITIR_QUANTIDADE_MAIOR_HOSPEDES',
+      'PERMITIR_APTO_MULTI_RESERVAS'
+    ];
+    await new Promise((resolve, reject) => {
+      db.run(
+        'DELETE FROM diretrizes WHERE code NOT IN (?, ?)',
+        allowedCodes,
+        (err) => (err ? reject(err) : resolve())
+      );
+    });
 
     const refreshed = await new Promise((resolve, reject) => {
       db.all('SELECT code, nome, descricao, valor, habilitado FROM diretrizes ORDER BY nome', [], (err, rows) => {
@@ -67,7 +73,7 @@ router.patch('/:code', async (req, res) => {
     const { code } = req.params;
     const { habilitado } = req.body || {};
     if (typeof habilitado !== 'boolean') {
-      return res.status(400).json({ error: 'Campo habilitado Ã© obrigatÃ³rio e deve ser booleano.' });
+      return res.status(400).json({ error: 'Campo habilitado é obrigatório e deve ser booleano.' });
     }
     const db = getAuthDb();
 
@@ -77,7 +83,7 @@ router.patch('/:code', async (req, res) => {
         resolve(!!row);
       });
     });
-    if (!exists) return res.status(404).json({ error: 'Diretriz nÃ£o encontrada.' });
+    if (!exists) return res.status(404).json({ error: 'Diretriz não encontrada.' });
 
     await new Promise((resolve, reject) => {
       db.run('UPDATE diretrizes SET habilitado = ?, updated_at = CURRENT_TIMESTAMP WHERE code = ?', [habilitado ? 1 : 0, code], (err) => {

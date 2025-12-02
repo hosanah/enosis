@@ -32,6 +32,7 @@ export const routes: Routes = [
       { path: 'users/:id', loadComponent: () => import('./components/users/user-form').then(m => m.UserFormComponent) },
       { path: 'change-password', loadComponent: () => import('./components/change-password/change-password').then(m => m.ChangePasswordComponent) },
       { path: 'reserva-natal', loadComponent: () => import('./components/reserva-natal/reserva-natal').then(m => m.ReservaNatalComponent) },
+      { path: 'reserva-ano-novo', loadComponent: () => import('./components/reserva-ano-novo/reserva-ano-novo').then(m => m.ReservaAnoNovoComponent) },
       { path: 'diretrizes', loadComponent: () => import('./components/diretrizes/diretrizes').then(m => m.DiretrizesComponent) },
       
       
