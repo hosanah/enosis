@@ -1,157 +1,103 @@
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <!-- Welcome Section -->
+﻿<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="mb-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-2">
-      Bem-vindo, {{ currentUser?.fullName || currentUser?.username }}! 👋
-    </h2>
-    <p class="text-gray-600">Aqui está um resumo das suas atividades e estatísticas do sistema.</p>
+    <h2 class="text-2xl font-bold text-gray-900">Dashboard de eventos</h2>
+    <p class="text-gray-600">Visao resumida de Natal e Ano Novo com check-ins, hospedes e mesas.</p>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <p-card *ngFor="let stat of statsCards" styleClass="border border-gray-200 rounded-xl">
-      <div class="flex items-center justify-between p-6">
-        <div>
-          <p class="text-sm font-medium text-gray-600">{{ stat.title }}</p>
-          <p class="text-2xl font-bold text-gray-900">{{ stat.value }}</p>
-          <p class="text-xs text-gray-500 mt-1">{{ stat.subtitle }}</p>
-        </div>
-        <div class="p-3 rounded-full" [ngClass]="stat.iconBg">
-          <i [class]="stat.icon + ' text-xl'"></i>
+  <div *ngIf="isLoading" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <p-card *ngFor="let _ of [1,2]" styleClass="border border-gray-200 rounded-xl">
+      <div class="p-6 space-y-4">
+        <p-skeleton width="50%" height="1.5rem"></p-skeleton>
+        <p-skeleton width="40%" height="2rem"></p-skeleton>
+        <p-skeleton width="60%" height="1.25rem"></p-skeleton>
+        <div class="grid grid-cols-3 gap-3 mt-2">
+          <p-skeleton height="3rem"></p-skeleton>
+          <p-skeleton height="3rem"></p-skeleton>
+          <p-skeleton height="3rem"></p-skeleton>
         </div>
       </div>
     </p-card>
   </div>
 
-  <!-- Charts and Data Section -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <!-- System Performance -->
-    <p-card styleClass="h-full border border-gray-200 rounded-xl">
+  <div *ngIf="!isLoading" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <p-card styleClass="border border-gray-200 rounded-xl">
       <ng-template pTemplate="header">
-        <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 font-semibold text-gray-700">Performance do Sistema</div>
+        <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 font-semibold text-gray-700">Natal</div>
       </ng-template>
       <ng-template pTemplate="content">
-        <div class="space-y-4 p-6">
-          <div>
-            <div class="flex justify-between items-center mb-2">
-              <span class="text-sm font-medium text-gray-700">CPU</span>
-              <span class="text-sm text-gray-500">{{ dashboardData?.charts?.systemPerformance?.cpu || 0 }}%</span>
-            </div>
-            <p-progressBar
-              [value]="dashboardData?.charts?.systemPerformance?.cpu || 0"
-              [style]="{'height': '8px'}"
-              styleClass="bg-gray-200 rounded-md"
-            ></p-progressBar>
+        <div class="p-6 space-y-4">
+          <div class="space-y-1">
+            <p class="text-sm text-gray-600">Apartamentos em check-in</p>
+            <p class="text-3xl font-bold text-gray-900">{{ dashboardData?.natal?.apartamentosCheckin || 0 }}</p>
           </div>
-
-          <div>
-            <div class="flex justify-between items-center mb-2">
-              <span class="text-sm font-medium text-gray-700">Memória</span>
-              <span class="text-sm text-gray-500">{{ dashboardData?.charts?.systemPerformance?.memory || 0 }}%</span>
-            </div>
-            <p-progressBar
-              [value]="dashboardData?.charts?.systemPerformance?.memory || 0"
-              [style]="{'height': '8px'}"
-              styleClass="bg-gray-200 rounded-md"
-              severity="warning"
-            ></p-progressBar>
+          <div class="space-y-1">
+            <p class="text-sm text-gray-600">Hospedes na casa</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ dashboardData?.natal?.hospedesNaCasa || 0 }}</p>
           </div>
-
+          <div class="space-y-1">
+            <p class="text-sm text-gray-600">Hospedes sem mesa</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ dashboardData?.natal?.hospedesSemReserva || 0 }}</p>
+          </div>
           <div>
-            <div class="flex justify-between items-center mb-2">
-              <span class="text-sm font-medium text-gray-700">Disco</span>
-              <span class="text-sm text-gray-500">{{ dashboardData?.charts?.systemPerformance?.disk || 0 }}%</span>
+            <p class="text-sm text-gray-600 mb-2">Mesas</p>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                <p class="text-xs text-blue-700">Total</p>
+                <p class="text-xl font-bold text-blue-900">{{ dashboardData?.natal?.mesas?.total || 0 }}</p>
+              </div>
+              <div class="bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+                <p class="text-xs text-green-700">Vagas</p>
+                <p class="text-xl font-bold text-green-900">{{ dashboardData?.natal?.mesas?.vagas || 0 }}</p>
+              </div>
+              <div class="bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
+                <p class="text-xs text-orange-700">Ocupadas</p>
+                <p class="text-xl font-bold text-orange-900">{{ dashboardData?.natal?.mesas?.ocupadas || 0 }}</p>
+              </div>
             </div>
-            <p-progressBar
-              [value]="dashboardData?.charts?.systemPerformance?.disk || 0"
-              [style]="{'height': '8px'}"
-              styleClass="bg-gray-200 rounded-md"
-              severity="success"
-            ></p-progressBar>
           </div>
         </div>
       </ng-template>
     </p-card>
 
-    <!-- Notifications -->
-    <p-card styleClass="h-full border border-gray-200 rounded-xl">
+    <p-card styleClass="border border-gray-200 rounded-xl">
       <ng-template pTemplate="header">
-        <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 font-semibold text-gray-700">Notificações</div>
+        <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 font-semibold text-gray-700">Ano Novo</div>
       </ng-template>
       <ng-template pTemplate="content">
-        <div class="space-y-3 p-6">
-          <div *ngFor="let notification of dashboardData?.notifications"
-               class="flex items-start space-x-3 p-3 rounded-lg border"
-               [ngClass]="{
-                 'bg-blue-50 border-blue-200': notification.type === 'info',
-                 'bg-green-50 border-green-200': notification.type === 'success',
-                 'bg-yellow-50 border-yellow-200': notification.type === 'warning',
-                 'bg-red-50 border-red-200': notification.type === 'error'
-               }">
-            <i [class]="getNotificationIcon(notification.type)"
-               [ngClass]="{
-                 'text-blue-600': notification.type === 'info',
-                 'text-green-600': notification.type === 'success',
-                 'text-yellow-600': notification.type === 'warning',
-                 'text-red-600': notification.type === 'error'
-               }"></i>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
-              <p class="text-xs text-gray-600">{{ notification.message }}</p>
-              <p class="text-xs text-gray-400 mt-1">{{ formatDate(notification.timestamp) }}</p>
+        <div class="p-6 space-y-4">
+          <div class="space-y-1">
+            <p class="text-sm text-gray-600">Apartamentos em check-in</p>
+            <p class="text-3xl font-bold text-gray-900">{{ dashboardData?.anoNovo?.apartamentosCheckin || 0 }}</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-sm text-gray-600">Hospedes na casa</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ dashboardData?.anoNovo?.hospedesNaCasa || 0 }}</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-sm text-gray-600">Hospedes sem mesa</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ dashboardData?.anoNovo?.hospedesSemReserva || 0 }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 mb-2">Mesas</p>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                <p class="text-xs text-blue-700">Total</p>
+                <p class="text-xl font-bold text-blue-900">{{ dashboardData?.anoNovo?.mesas?.total || 0 }}</p>
+              </div>
+              <div class="bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+                <p class="text-xs text-green-700">Vagas</p>
+                <p class="text-xl font-bold text-green-900">{{ dashboardData?.anoNovo?.mesas?.vagas || 0 }}</p>
+              </div>
+              <div class="bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
+                <p class="text-xs text-orange-700">Ocupadas</p>
+                <p class="text-xl font-bold text-orange-900">{{ dashboardData?.anoNovo?.mesas?.ocupadas || 0 }}</p>
+              </div>
             </div>
           </div>
         </div>
       </ng-template>
     </p-card>
   </div>
-
-  <!-- Recent Activity Table -->
-  <p-card styleClass="border border-gray-200 rounded-xl">
-    <ng-template pTemplate="header">
-      <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 font-semibold text-gray-700">Atividade Recente</div>
-    </ng-template>
-    <ng-template pTemplate="content">
-      <p-table
-        [value]="dashboardData?.recentActivity || []"
-        [loading]="isLoading"
-        styleClass="w-full"
-        tableStyleClass="w-full"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">ID</th>
-            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">Ação</th>
-            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">Usuário</th>
-            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">Data/Hora</th>
-            <th class="bg-gray-50 border border-gray-200 text-gray-700 font-semibold p-4">Status</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-activity>
-          <tr>
-            <td class="border border-gray-200 p-4">{{ activity.id }}</td>
-            <td class="border border-gray-200 p-4">
-              <i class="pi pi-check-circle text-green-600 mr-2"></i>
-              {{ activity.action }}
-            </td>
-            <td class="border border-gray-200 p-4">{{ activity.user }}</td>
-            <td class="border border-gray-200 p-4">{{ formatDate(activity.timestamp) }}</td>
-            <td class="border border-gray-200 p-4">
-              <p-tag value="Sucesso" severity="success" styleClass="rounded-md font-medium"></p-tag>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="5" class="text-center py-8 text-gray-500">
-              <i class="pi pi-info-circle mr-2"></i>
-              Nenhuma atividade encontrada
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </ng-template>
-  </p-card>
 </main>
 
 <p-toast></p-toast>

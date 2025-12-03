@@ -105,7 +105,7 @@ function requireDomainDb(req, res, next) {
   next();
 }
 
-app.use('/dashboard', authenticateToken, dashboardRoutes);
+app.use('/dashboard', authenticateToken, requireDomainDb, dashboardRoutes);
 app.use('/users', authenticateToken, usersRoutes);
 app.use('/diretrizes', authenticateToken, diretrizesRoutes);
 // Removed routes: restaurantes, eventos, reservas (CM), eventos-reservas, diretrizes
