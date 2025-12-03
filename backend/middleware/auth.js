@@ -12,6 +12,11 @@ const { ApiError } = require('./errorHandler');
  * Middleware para verificar token JWT
  */
 function authenticateToken(req, res, next) {
+  // Não exige token para requisições de pré‑flight CORS
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   // Obter token do header Authorization
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
