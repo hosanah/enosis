@@ -104,7 +104,7 @@ router.put('/:id', async (req, res, next) => {
     if (password) {
       return next(new ApiError(400, 'Senha não pode ser alterada por este endpoint', 'PASSWORD_EDIT_FORBIDDEN'));
     }
-    const db = getDatabase();
+    const db = getAuthDb();
     db.get('SELECT id FROM users WHERE id = ?', [req.params.id], async (err, user) => {
       if (err) {
         console.error('❌ Erro ao buscar usuário:', err.message);
@@ -159,3 +159,4 @@ router.delete('/:id', (req, res, next) => {
 });
 
 module.exports = router;
+
