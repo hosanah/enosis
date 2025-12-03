@@ -11,56 +11,79 @@ router.get('/mesas-por-uh', async (req, res) => {
     const idhotel = Number(req.query.idhotel || 1);
 
     const sql = `
-      WITH DISTINCT_MESAS AS (
-        SELECT DISTINCT
-            RF.CODUH,
-            RF.IDHOTEL,
-            EM.NUMMESA,
-            EI.DESCRICAO
-        FROM CM.ENOMARCACAOMESAANO EM
-        JOIN CM.ENOMARCACAOITEMANO EI 
-            ON EI.IDMARCACAOMESA = EM.IDMARCACAOMESA
-        JOIN CM.RESERVASFRONT RF 
-            ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
-      ),
-      ENUMERADA AS (
-        SELECT 
-            CODUH,
-            IDHOTEL,
-            NUMMESA,
-            DESCRICAO,
-            ROW_NUMBER() OVER (PARTITION BY CODUH ORDER BY NUMMESA) AS RN
-        FROM DISTINCT_MESAS
-      )
-      SELECT
-          UH.CODUH,
-          UH.IDHOTEL,
+      -- 1) Mesas distintas
+            WITH MESAS AS (
+                SELECT DISTINCT
+                    RF.CODUH,
+                    RF.IDHOTEL,
+                    EM.NUMMESA,
+                    EI.DESCRICAO
+                FROM CM.ENOMARCACAOMESAANO EM
+                JOIN CM.ENOMARCACAOITEMANO EI 
+                    ON EI.IDMARCACAOMESA = EM.IDMARCACAOMESA
+                JOIN RESERVASFRONT RF 
+                    ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
+            ),
 
-          MAX(CASE WHEN E.RN = 1 THEN E.NUMMESA END) AS MESA1,
-          MAX(CASE WHEN E.RN = 2 THEN E.NUMMESA END) AS MESA2,
-          MAX(CASE WHEN E.RN = 3 THEN E.NUMMESA END) AS MESA3,
-          MAX(CASE WHEN E.RN = 4 THEN E.NUMMESA END) AS MESA4,
-          MAX(CASE WHEN E.RN = 5 THEN E.NUMMESA END) AS MESA5,
-          MAX(CASE WHEN E.RN = 6 THEN E.NUMMESA END) AS MESA6,
+            -- 2) Contagem bruta (igual a sua)
+            CONTAGEM AS (
+                SELECT 
+                    RF.CODUH,
+                    COUNT(*) AS QTD
+                FROM CM.ENOMARCACAOMESAANO EM
+                JOIN CM.ENOMARCACAOITEMANO EI 
+                    ON EI.IDMARCACAOMESA = EM.IDMARCACAOMESA
+                JOIN RESERVASFRONT RF 
+                    ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
+                GROUP BY RF.CODUH
+            ),
 
-          (SELECT COUNT(*)
-             FROM DISTINCT_MESAS X 
-            WHERE X.CODUH = UH.CODUH) AS QUANTIDADE,
+            -- 3) Mesas numeradas
+            MESAS_RN AS (
+                SELECT
+                    CODUH,
+                    IDHOTEL,
+                    NUMMESA,
+                    DESCRICAO,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY CODUH ORDER BY NUMMESA
+                    ) AS RN
+                FROM MESAS
+            )
 
-          MAX(CASE WHEN E.RN = 1 THEN E.DESCRICAO END) AS OBS1,
-          MAX(CASE WHEN E.RN = 2 THEN E.DESCRICAO END) AS OBS2,
-          MAX(CASE WHEN E.RN = 3 THEN E.DESCRICAO END) AS OBS3,
-          MAX(CASE WHEN E.RN = 4 THEN E.DESCRICAO END) AS OBS4,
-          MAX(CASE WHEN E.RN = 5 THEN E.DESCRICAO END) AS OBS5,
-          MAX(CASE WHEN E.RN = 6 THEN E.DESCRICAO END) AS OBS6
+            SELECT
+                UH.CODUH,
+                UH.IDHOTEL,
 
-      FROM CM.UH UH
-      LEFT JOIN ENUMERADA E 
-        ON E.CODUH = UH.CODUH
-      WHERE UH.UHPOOL = 'S'
-        AND UH.IDHOTEL = ?
-      GROUP BY UH.CODUH, UH.IDHOTEL
-      ORDER BY UH.CODUH
+                MAX(CASE WHEN M.RN = 1 THEN M.NUMMESA END) AS MESA1,
+                MAX(CASE WHEN M.RN = 2 THEN M.NUMMESA END) AS MESA2,
+                MAX(CASE WHEN M.RN = 3 THEN M.NUMMESA END) AS MESA3,
+                MAX(CASE WHEN M.RN = 4 THEN M.NUMMESA END) AS MESA4,
+                MAX(CASE WHEN M.RN = 5 THEN M.NUMMESA END) AS MESA5,
+                MAX(CASE WHEN M.RN = 6 THEN M.NUMMESA END) AS MESA6,
+
+                C.QTD AS QUANTIDADE,
+
+                MAX(CASE WHEN M.RN = 1 THEN M.DESCRICAO END) AS OBS1,
+                MAX(CASE WHEN M.RN = 2 THEN M.DESCRICAO END) AS OBS2,
+                MAX(CASE WHEN M.RN = 3 THEN M.DESCRICAO END) AS OBS3,
+                MAX(CASE WHEN M.RN = 4 THEN M.DESCRICAO END) AS OBS4,
+                MAX(CASE WHEN M.RN = 5 THEN M.DESCRICAO END) AS OBS5,
+                MAX(CASE WHEN M.RN = 6 THEN M.DESCRICAO END) AS OBS6
+
+            FROM UH
+            LEFT JOIN MESAS_RN M ON M.CODUH = UH.CODUH
+            LEFT JOIN CONTAGEM  C ON C.CODUH = UH.CODUH
+
+            WHERE UH.UHPOOL = 'S'
+              AND UH.IDHOTEL = ?
+
+            GROUP BY 
+                UH.CODUH,
+                UH.IDHOTEL,
+                C.QTD
+
+            ORDER BY UH.CODUH
     `;
 
     const { rows } = await db.query(sql, [idhotel]);
@@ -72,68 +95,135 @@ router.get('/mesas-por-uh', async (req, res) => {
       'inline; filename="relatorio-mesas-por-uh-anonovo.pdf"'
     );
 
+    const PDFDocument = require('pdfkit');
+    const path = require('path');
+
     const doc = new PDFDocument({ margin: 40 });
     doc.pipe(res);
 
-    doc.fontSize(14).text('Relatório - Mesas por UH (Ano Novo)', { align: 'center' });
-    doc.moveDown(0.5);
-    doc.fontSize(10).text(`Hotel: ${idhotel}`, { align: 'left' });
-    doc.text(`Gerado em: ${new Date().toLocaleString()}`, { align: 'left' });
-    doc.moveDown();
+    // ----------------------------------------------
+    // 1. Cabeçalho com logo
+    // ----------------------------------------------
+    function drawHeader(showLogo = false) {
+      let y = 40;
 
-    // Cabeçalho da tabela
-    doc.font('Helvetica-Bold');
-    doc.text('UH', { continued: true, width: 60 });
-    doc.text('Mesa1', { continued: true, width: 40 });
-    doc.text('Mesa2', { continued: true, width: 40 });
-    doc.text('Mesa3', { continued: true, width: 40 });
-    doc.text('Mesa4', { continued: true, width: 40 });
-    doc.text('Mesa5', { continued: true, width: 40 });
-    doc.text('Mesa6', { continued: true, width: 40 });
-    doc.text('Qtd', { width: 30 });
-    doc.moveDown(0.5);
-    doc.font('Helvetica');
+      if (showLogo) {
+        try {
+          const logoPath = path.join(__dirname, '../uploads/LogoZapChat.png');
+          doc.image(logoPath, 20, 25, { width: 120, height: 50 });
+        } catch (e) { }
 
-    data.forEach((r) => {
-      const coduh = r.CODUH ?? r.coduh ?? '';
-      const mesa1 = r.MESA1 ?? r.mesa1 ?? '';
-      const mesa2 = r.MESA2 ?? r.mesa2 ?? '';
-      const mesa3 = r.MESA3 ?? r.mesa3 ?? '';
-      const mesa4 = r.MESA4 ?? r.mesa4 ?? '';
-      const mesa5 = r.MESA5 ?? r.mesa5 ?? '';
-      const mesa6 = r.MESA6 ?? r.mesa6 ?? '';
-      const quantidade = r.QUANTIDADE ?? r.quantidade ?? 0;
+        doc.font('Helvetica-Bold').fontSize(16);
+        doc.text('Relatório - Mesas por UH (Ano Novo)', 200, 45);
 
-      doc.text(String(coduh), { continued: true, width: 60 });
-      doc.text(String(mesa1 || ''), { continued: true, width: 40 });
-      doc.text(String(mesa2 || ''), { continued: true, width: 40 });
-      doc.text(String(mesa3 || ''), { continued: true, width: 40 });
-      doc.text(String(mesa4 || ''), { continued: true, width: 40 });
-      doc.text(String(mesa5 || ''), { continued: true, width: 40 });
-      doc.text(String(mesa6 || ''), { continued: true, width: 40 });
-      doc.text(String(quantidade || ''), { width: 30 });
+        doc.font('Helvetica').fontSize(10);
+        doc.text(`Gerado em: ${new Date().toLocaleString()}`, 200, 70);
 
-      // Observações em linha abaixo, se existirem
-      const obs1 = r.OBS1 ?? r.obs1 ?? '';
-      const obs2 = r.OBS2 ?? r.obs2 ?? '';
-      const obs3 = r.OBS3 ?? r.obs3 ?? '';
-      const obs4 = r.OBS4 ?? r.obs4 ?? '';
-      const obs5 = r.OBS5 ?? r.obs5 ?? '';
-      const obs6 = r.OBS6 ?? r.obs6 ?? '';
-      const obsText = [obs1, obs2, obs3, obs4, obs5, obs6]
-        .filter((x) => x && String(x).trim() !== '')
-        .join(' | ');
-
-      if (obsText) {
-        doc.moveDown(0.1);
-        doc.fontSize(8).text(`Obs: ${obsText}`, { indent: 10 });
-        doc.fontSize(10);
+        y = 120;
       }
 
-      doc.moveDown(0.3);
+      // Cabeçalho da tabela
+      doc.font('Helvetica-Bold').fontSize(11);
+
+      doc.rect(40, y, 500, 20).fill('#EEEEEE').stroke(); // fundo cinza claro
+
+      doc.fillColor('#000000');
+      doc.text('UH', 50, y + 5);
+      doc.text('Mesas', 150, y + 5);
+      doc.text('Qtd', 440 - 10, y + 5);
+      doc.text('Compareceu', 480 - 10, y + 5);
+
+      return y + 20;
+    }
+
+    // ----------------------------------------------
+    // 2. Primeira página
+    // ----------------------------------------------
+    let y = drawHeader(true);
+
+    // Colunas
+    const colUH = 50;
+    const colMesas = 150;
+    const colQtd = 440 - 10;
+
+    // ----------------------------------------------
+    // 3. Loop dos dados com tabela
+    // ----------------------------------------------
+    data.forEach((r, index) => {
+
+      const mesas = [
+        r.MESA1 ?? r.mesa1 ?? '',
+        r.MESA2 ?? r.mesa2 ?? '',
+        r.MESA3 ?? r.mesa3 ?? '',
+        r.MESA4 ?? r.mesa4 ?? '',
+        r.MESA5 ?? r.mesa5 ?? '',
+        r.MESA6 ?? r.mesa6 ?? ''
+      ]
+        .filter(x => x && x !== '')
+        .join(', ');
+
+      const quantidade = r.QUANTIDADE ?? r.quantidade ?? 0;
+
+      // Observações
+      const obsText = [
+        r.OBS1, r.OBS2, r.OBS3, r.OBS4, r.OBS5, r.OBS6
+      ]
+        .filter(x => x && String(x).trim() !== '')
+        .join(' | ');
+
+      // -----------------------------------------------------
+      // 1) CALCULA ALTURA DA LINHA
+      // -----------------------------------------------------
+      const mesasHeight = doc.heightOfString(mesas, { width: 300, align: 'left' });
+      const obsHeight = obsText ? doc.heightOfString(`Obs: ${obsText}`, { width: 300 }) : 0;
+
+      const rowHeight = Math.max(20, mesasHeight) + (obsHeight > 0 ? obsHeight + 6 : 0);
+
+      // -----------------------------------------------------
+      // 2) QUEBRA DE PÁGINA AUTOMÁTICA
+      // -----------------------------------------------------
+      if (y + rowHeight > 760) {
+        doc.addPage();
+        y = drawHeader(false);
+      }
+
+      // -----------------------------------------------------
+      // 3) DESENHA FUNDO (ZEBRA)
+      // -----------------------------------------------------
+      if (index % 2 === 0) {
+        doc.rect(40, y, 500, rowHeight).fill('#F7F7F7').stroke();
+      } else {
+        doc.rect(40, y, 500, rowHeight).stroke();
+      }
+
+      // -----------------------------------------------------
+      // 4) TEXTO DA LINHA
+      // -----------------------------------------------------
+      doc.fillColor('#000').fontSize(10);
+
+      doc.text(String(r.CODUH ?? r.coduh), colUH, y + 5);
+      doc.text(mesas, 150, y + 5, { width: colMesas });
+      doc.text(String(quantidade), colQtd, y + 5);
+
+      // -----------------------------------------------------
+      // 5) OBSERVAÇÕES
+      // -----------------------------------------------------
+      if (obsText) {
+        doc.fillColor('#444').fontSize(8);
+        doc.text(`Obs: ${obsText}`, 150, y + mesasHeight + 6, { width: 300 });
+        doc.fontSize(10).fillColor('#000');
+      }
+
+      // -----------------------------------------------------
+      // 6) INCREMENTA Y COM ALTURA EXATA
+      // -----------------------------------------------------
+      y += rowHeight + 4;
     });
 
+
     doc.end();
+
+
   } catch (err) {
     console.error('Erro ao gerar relatorio mesas-por-uh (Ano Novo):', err);
     res
