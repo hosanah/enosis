@@ -1,11 +1,11 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const { getOracle } = require('../config/oracle');
 const PDFDocument = require('pdfkit');
 const path = require('path');
 
-// GET /anonovo/relatorios/mesas-por-uh
-// Relatório PDF: listagem de mesas por UH (Ano Novo)
+// GET /natal/relatorios/mesas-por-uh
+// RelatÃ³rio PDF: listagem de mesas por UH (Natal)
 router.get('/mesas-por-uh', async (req, res) => {
   try {
     const db = getOracle();
@@ -19,8 +19,8 @@ router.get('/mesas-por-uh', async (req, res) => {
           RF.IDHOTEL,
           EM.NUMMESA,
           EI.DESCRICAO
-        FROM CM.ENOMARCACAOMESAANO EM
-        JOIN CM.ENOMARCACAOITEMANO EI 
+        FROM CM.ENOMARCACAOMESA EM
+        JOIN CM.ENOMARCACAOITEM EI 
           ON EI.IDMARCACAOMESA = EM.IDMARCACAOMESA
         JOIN CM.RESERVASFRONT RF 
           ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
@@ -31,8 +31,8 @@ router.get('/mesas-por-uh', async (req, res) => {
         SELECT 
           RF.CODUH,
           COUNT(*) AS QTD
-        FROM CM.ENOMARCACAOMESAANO EM
-        JOIN CM.ENOMARCACAOITEMANO EI 
+        FROM CM.ENOMARCACAOMESA EM
+        JOIN CM.ENOMARCACAOITEM EI 
           ON EI.IDMARCACAOMESA = EM.IDMARCACAOMESA
         JOIN CM.RESERVASFRONT RF 
           ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
@@ -93,13 +93,13 @@ router.get('/mesas-por-uh', async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      'inline; filename="relatorio-mesas-por-uh-anonovo.pdf"'
+      'inline; filename="relatorio-mesas-por-uh-natal.pdf"'
     );
 
     const doc = new PDFDocument({ margin: 40 });
     doc.pipe(res);
 
-    // Função para desenhar cabeçalho
+    // FunÃ§Ã£o para desenhar cabeÃ§alho
     function drawHeader(showLogo = false) {
       let y = 40;
 
@@ -108,11 +108,11 @@ router.get('/mesas-por-uh', async (req, res) => {
           const logoPath = path.join(__dirname, '../uploads/LogoZapChat.png');
           doc.image(logoPath, 40, 30, { width: 100, height: 40 });
         } catch (e) {
-          console.log('Logo não encontrada');
+          console.log('Logo nÃ£o encontrada');
         }
 
         doc.font('Helvetica-Bold').fontSize(16);
-        doc.text('Relatório - Mesas por UH (Ano Novo)', 150, 40, { align: 'left' });
+        doc.text('RelatÃ³rio - Mesas por UH (Natal)', 150, 40, { align: 'left' });
 
         doc.font('Helvetica').fontSize(10);
         doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 150, 60);
@@ -120,13 +120,13 @@ router.get('/mesas-por-uh', async (req, res) => {
         y = 100;
       }
 
-      // Cabeçalho da tabela
+      // CabeÃ§alho da tabela
       doc.font('Helvetica-Bold').fontSize(10);
 
-      // Fundo cinza do cabeçalho
+      // Fundo cinza do cabeÃ§alho
       doc.rect(40, y, 515, 25).fillAndStroke('#EEEEEE', '#000000');
 
-      // Texto do cabeçalho
+      // Texto do cabeÃ§alho
       doc.fillColor('#000000');
       doc.text('UH', 50, y + 8, { width: 60, continued: false });
       doc.text('Mesas', 120, y + 8, { width: 260, continued: false });
@@ -137,7 +137,7 @@ router.get('/mesas-por-uh', async (req, res) => {
       return y + 25;
     }
 
-    // Desenha primeira página com logo
+    // Desenha primeira pÃ¡gina com logo
     let currentY = drawHeader(true);
 
     const bottomMargin = 60;
@@ -159,7 +159,7 @@ router.get('/mesas-por-uh', async (req, res) => {
 
       const quantidade = r.QUANTIDADE ?? r.quantidade ?? 0;
 
-      // Observações
+      // ObservaÃ§Ãµes
       const obsText = [
         r.OBS1 ?? r.obs1 ?? '',
         r.OBS2 ?? r.obs2 ?? '',
@@ -175,7 +175,7 @@ router.get('/mesas-por-uh', async (req, res) => {
         width: 260 
       });
 
-      // Calcula altura das observações
+      // Calcula altura das observaÃ§Ãµes
       let obsTextHeight = 0;
       if (obsText) {
         doc.fontSize(8);
@@ -184,10 +184,10 @@ router.get('/mesas-por-uh', async (req, res) => {
         }) + 6;
       }
 
-      // Altura total necessária para o registro
+      // Altura total necessÃ¡ria para o registro
       const rowHeight = Math.max(lineHeight, mesasTextHeight + 6) + obsTextHeight;
 
-      // Verifica se precisa de nova página
+      // Verifica se precisa de nova pÃ¡gina
       if (currentY + rowHeight > doc.page.height - bottomMargin) {
         doc.addPage();
         currentY = drawHeader(false);
@@ -203,7 +203,7 @@ router.get('/mesas-por-uh', async (req, res) => {
       doc.moveTo(380, rowStartY).lineTo(380, rowStartY + rowHeight).stroke('#CCCCCC');
       doc.moveTo(450, rowStartY).lineTo(450, rowStartY + rowHeight).stroke('#CCCCCC');
 
-      // Escreve conteúdo da linha
+      // Escreve conteÃºdo da linha
       doc.fillColor('#000000').fontSize(10);
       
       // UH
@@ -218,7 +218,7 @@ router.get('/mesas-por-uh', async (req, res) => {
         continued: false 
       });
 
-      // Observações (se existirem) - logo abaixo das mesas
+      // ObservaÃ§Ãµes (se existirem) - logo abaixo das mesas
       if (obsText) {
         const obsY = rowStartY + mesasTextHeight + 8;
         doc.fontSize(8).fillColor('#555555');
@@ -242,17 +242,17 @@ router.get('/mesas-por-uh', async (req, res) => {
         continued: false 
       });
 
-      // Move para próxima linha
+      // Move para prÃ³xima linha
       currentY += rowHeight;
     });
 
     doc.end();
 
   } catch (err) {
-    console.error('Erro ao gerar relatorio mesas-por-uh (Ano Novo):', err);
+    console.error('Erro ao gerar relatorio mesas-por-uh (Natal):', err);
     res
       .status(500)
-      .json({ error: 'Falha ao gerar relatório de mesas por UH (Ano Novo).' });
+      .json({ error: 'Falha ao gerar relatÃ³rio de mesas por UH (Natal).' });
   }
 });
 
