@@ -149,7 +149,7 @@ router.get('/mesas-por-uh', async (req, res) => {
     // ----------------------------------------------
     // 3. Loop dos dados com tabela
     // ----------------------------------------------
-    data.forEach((r, index) => {
+    data.forEach((r, indexTotal) => {
 
       const mesas = [
         r.MESA1 ?? r.mesa1 ?? '',
@@ -158,71 +158,62 @@ router.get('/mesas-por-uh', async (req, res) => {
         r.MESA4 ?? r.mesa4 ?? '',
         r.MESA5 ?? r.mesa5 ?? '',
         r.MESA6 ?? r.mesa6 ?? ''
-      ]
-        .filter(x => x && x !== '')
-        .join(', ');
+      ].filter(x => x && x !== '').join(', ');
 
       const quantidade = r.QUANTIDADE ?? r.quantidade ?? 0;
 
       // Observações
       const obsText = [
         r.OBS1, r.OBS2, r.OBS3, r.OBS4, r.OBS5, r.OBS6
-      ]
-        .filter(x => x && String(x).trim() !== '')
-        .join(' | ');
+      ].filter(x => x && String(x).trim() !== '').join(' | ');
 
-      // -----------------------------------------------------
-      // 1) CALCULA ALTURA DA LINHA
-      // -----------------------------------------------------
-      const mesasHeight = doc.heightOfString(mesas, { width: 300, align: 'left' });
-      const obsHeight = obsText ? doc.heightOfString(`Obs: ${obsText}`, { width: 300 }) : 0;
+      // ------------------------------------------
+      // CALCULA ALTURA DINÂMICA
+      // ------------------------------------------
+      const mesasHeight = doc.heightOfString(mesas, { width: 300 });
+      const obsHeight = obsText ? doc.heightOfString(`Obs: ${obsText}`, { width: 300 }) + 4 : 0;
 
-      const rowHeight = Math.max(20, mesasHeight) + (obsHeight > 0 ? obsHeight + 6 : 0);
+      const rowHeight = Math.max(20, mesasHeight) + obsHeight + 4;
 
-      // -----------------------------------------------------
-      // 2) QUEBRA DE PÁGINA AUTOMÁTICA
-      // -----------------------------------------------------
+      // ------------------------------------------
+      // VERIFICA SE PRECISA DE NOVA PÁGINA
+      // ------------------------------------------
       if (y + rowHeight > 760) {
         doc.addPage();
-        y = drawHeader(false);
+        y = drawHeader(false); // redesenha cabeçalho da tabela
       }
 
-      // -----------------------------------------------------
-      // 3) DESENHA FUNDO (ZEBRA)
-      // -----------------------------------------------------
-      if (index % 2 === 0) {
-        doc.rect(40, y, 500, rowHeight).fill('#F7F7F7').stroke();
-      } else {
-        doc.rect(40, y, 500, rowHeight).stroke();
-      }
+      // ------------------------------------------
+      // DESENHA A LINHA DA TABELA (FUNDO + BORDA)
+      // ------------------------------------------
+      const zebra = (indexTotal % 2 === 0) ? '#F7F7F7' : '#FFFFFF';
+      doc.rect(40, y, 500, rowHeight).stroke();
 
-      // -----------------------------------------------------
-      // 4) TEXTO DA LINHA
-      // -----------------------------------------------------
+      // ------------------------------------------
+      // ESCREVE TEXTO DA LINHA
+      // ------------------------------------------
       doc.fillColor('#000').fontSize(10);
 
-      doc.text(String(r.CODUH ?? r.coduh), colUH, y + 5);
-      doc.text(mesas, 150, y + 5, { width: colMesas });
-      doc.text(String(quantidade), colQtd, y + 5);
+      doc.text(String(r.CODUH ?? r.coduh), 50, y + 5);
+      doc.text(mesas, 150, y + 5, { width: 300 });
+      doc.text(String(quantidade), 490, y + 5);
 
-      // -----------------------------------------------------
-      // 5) OBSERVAÇÕES
-      // -----------------------------------------------------
+      // ------------------------------------------
+      // ESCREVE OBSERVAÇÃO LOGO ABAIXO
+      // ------------------------------------------
       if (obsText) {
-        doc.fillColor('#444').fontSize(8);
-        doc.text(`Obs: ${obsText}`, 150, y + mesasHeight + 6, { width: 300 });
+        doc.fontSize(8).fillColor('#444');
+        doc.text(`Obs: ${obsText}`, 150, y + mesasHeight + 8, { width: 300 });
         doc.fontSize(10).fillColor('#000');
       }
 
-      // -----------------------------------------------------
-      // 6) INCREMENTA Y COM ALTURA EXATA
-      // -----------------------------------------------------
-      y += rowHeight + 4;
+      // ------------------------------------------
+      // MOVE PARA PRÓXIMA LINHA
+      // ------------------------------------------
+      y += rowHeight + 2;
     });
 
-
     doc.end();
-
 
   } catch (err) {
     console.error('Erro ao gerar relatorio mesas-por-uh (Ano Novo):', err);
