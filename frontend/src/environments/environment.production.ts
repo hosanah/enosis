@@ -1,4 +1,4 @@
 export const environment = {
-  apiUrl: 'https://tematicoapi.zapchatbr.com',
+  apiUrl: 'http://192.168.150.18:4000',
   apiKey: '',
 };

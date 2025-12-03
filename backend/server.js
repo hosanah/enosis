@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Servidor principal da API Node.js com Express
- * Inclui autenticação JWT, CORS e rotas protegidas
+ * Inclui autenticaÃ§Ã£o JWT, CORS e rotas protegidas
  */
 
 require('dotenv').config();
@@ -25,10 +25,10 @@ const natalRelatoriosRoutes = require('./routes/natal.relatorios');
 const anonovoRoutes = require('./routes/anonovo.routes');
 const anonovoRelatoriosRoutes = require('./routes/anonovo.relatorios');
 
-// Importar middleware de autenticação
+// Importar middleware de autenticaÃ§Ã£o
 const { authenticateToken } = require('./middleware/auth');
 
-// Importar configuração do banco de dados
+// Importar configuraÃ§Ã£o do banco de dados
 const { initDatabase } = require('./config/database');
 const { initAuthDatabase } = require('./config/authdb');
 const { isOracleReady } = require('./config/oracle');
@@ -37,9 +37,9 @@ const app = express();
 // Confiar no primeiro proxy para que o express-rate-limit
 // identifique corretamente o IP do cliente quando X-Forwarded-For estiver presente
 app.set('trust proxy', 1);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
-// Configurações de segurança
+// Configurações de segurança e rate limiting
 app.use(helmet());
 
 // Rate limiting - limita requisições por IP
@@ -63,12 +63,26 @@ const loginLimiter = rateLimit({
 });
 
 // Configuração CORS
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:4200',
+const defaultOrigins = [
+  'http://localhost:4200',
+  'http://192.168.150.18',
+  'http://192.168.150.18:4200'
+];
+const envOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+}));
 
 // Middleware para parsing JSON
 app.use(express.json({ limit: '10mb' }));
@@ -89,18 +103,18 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Documentação Swagger
+// DocumentaÃ§Ã£o Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Rotas de autenticação (aplicar rate limiting específico)
+// Rotas de autenticaÃ§Ã£o (aplicar rate limiting especÃ­fico)
 app.use('/auth/login', loginLimiter);
 app.use('/auth', authRoutes);
 
-// Rotas protegidas (requerem autenticação)
-// Verificador do banco de domínio (Oracle)
+// Rotas protegidas (requerem autenticaÃ§Ã£o)
+// Verificador do banco de domÃ­nio (Oracle)
 function requireDomainDb(req, res, next) {
   if (!isOracleReady()) {
-    return res.status(503).json({ error: 'Serviço de dados indisponível', code: 'DOMAIN_DB_UNAVAILABLE' });
+    return res.status(503).json({ error: 'ServiÃ§o de dados indisponÃ­vel', code: 'DOMAIN_DB_UNAVAILABLE' });
   }
   next();
 }
@@ -115,12 +129,12 @@ app.use('/natal/relatorios', authenticateToken, requireDomainDb, natalRelatorios
 app.use('/anonovo', authenticateToken, requireDomainDb, anonovoRoutes);
 app.use('/anonovo/relatorios', authenticateToken, requireDomainDb, anonovoRelatoriosRoutes);
 
-// Rota para servir arquivos estáticos (se necessário)
+// Rota para servir arquivos estÃ¡ticos (se necessÃ¡rio)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware de tratamento de erros
 app.use((req, res, next) => {
-  next(new ApiError(404, 'Rota não encontrada'));
+  next(new ApiError(404, 'Rota nÃ£o encontrada'));
 });
 
 app.use(errorHandler);
@@ -128,35 +142,38 @@ app.use(errorHandler);
 // Inicializar banco de dados e servidor
 async function startServer() {
   try {
-    // Inicializar bancos de dados (SQLite para auth/sessões e Oracle para domínio)
+    // Inicializar bancos de dados (SQLite para auth/sessÃµes e Oracle para domÃ­nio)
     await initAuthDatabase();
     await initDatabase();
-    console.log('✅ Banco de dados inicializado com sucesso');
+    console.log('âœ… Banco de dados inicializado com sucesso');
     
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Servidor rodando na porta ${PORT}`);
-      console.log(`📍 URL: http://localhost:${PORT}`);
-      console.log(`🌍 Ambiente: ${process.env.NODE_ENV}`);
-      console.log(`🔒 CORS habilitado para: ${process.env.CORS_ORIGIN}`);
+      console.log(`ðŸš€ Servidor rodando na porta ${PORT}`);
+      console.log(`ðŸ“ URL: http://localhost:${PORT}`);
+      console.log(`ðŸŒ Ambiente: ${process.env.NODE_ENV}`);
+      console.log(`ðŸ”’ CORS habilitado para: ${process.env.CORS_ORIGIN}`);
     });
   } catch (error) {
-    console.error('❌ Erro ao iniciar servidor:', error);
+    console.error('âŒ Erro ao iniciar servidor:', error);
     process.exit(1);
   }
 }
 
 // Tratamento de sinais para encerramento graceful
 process.on('SIGTERM', () => {
-  console.log('🛑 Recebido SIGTERM, encerrando servidor...');
+  console.log('ðŸ›‘ Recebido SIGTERM, encerrando servidor...');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('🛑 Recebido SIGINT, encerrando servidor...');
+  console.log('ðŸ›‘ Recebido SIGINT, encerrando servidor...');
   process.exit(0);
 });
 
 // Iniciar servidor
 startServer();
+
+
+
 
