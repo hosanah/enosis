@@ -33,8 +33,18 @@ export class RelatoriosComponent {
     this.abrirPdf(url);
   }
 
+  abrirRelatorioNatalUhsPorMesa(): void {
+    const url = `${this.apiUrl}/natal/relatorios/uh-por-mesa?idhotel=${this.idhotel}`;
+    this.abrirPdf(url);
+  }
+
   abrirRelatorioAnoNovo(): void {
     const url = `${this.apiUrl}/anonovo/relatorios/mesas-por-uh?idhotel=${this.idhotel}`;
+    this.abrirPdf(url);
+  }
+
+  abrirRelatorioAnoNovoUhsPorMesa(): void {
+    const url = `${this.apiUrl}/anonovo/relatorios/uh-por-mesa?idhotel=${this.idhotel}`;
     this.abrirPdf(url);
   }
 }

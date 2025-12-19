@@ -134,7 +134,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware de tratamento de erros
 app.use((req, res, next) => {
-  next(new ApiError(404, 'Rota nÃ£o encontrada'));
+  next(new ApiError(404, 'Rota não encontrada'));
 });
 
 app.use(errorHandler);
@@ -142,32 +142,32 @@ app.use(errorHandler);
 // Inicializar banco de dados e servidor
 async function startServer() {
   try {
-    // Inicializar bancos de dados (SQLite para auth/sessÃµes e Oracle para domÃ­nio)
+    // Inicializar bancos de dados (SQLite para auth/sessões e Oracle para domÃ­nio)
     await initAuthDatabase();
     await initDatabase();
-    console.log('âœ… Banco de dados inicializado com sucesso');
+    console.log('Conexão… Banco de dados inicializado com sucesso');
     
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`ðŸš€ Servidor rodando na porta ${PORT}`);
-      console.log(`ðŸ“ URL: http://localhost:${PORT}`);
-      console.log(`ðŸŒ Ambiente: ${process.env.NODE_ENV}`);
-      console.log(`ðŸ”’ CORS habilitado para: ${process.env.CORS_ORIGIN}`);
+      console.log(`Conexão Servidor rodando na porta ${PORT}`);
+      console.log(`Conexão URL: http://localhost:${PORT}`);
+      console.log(`Conexão Ambiente: ${process.env.NODE_ENV}`);
+      console.log(`Conexão CORS habilitado para: ${process.env.CORS_ORIGIN}`);
     });
   } catch (error) {
-    console.error('âŒ Erro ao iniciar servidor:', error);
+    console.error('Erro ao iniciar servidor:', error);
     process.exit(1);
   }
 }
 
 // Tratamento de sinais para encerramento graceful
 process.on('SIGTERM', () => {
-  console.log('ðŸ›‘ Recebido SIGTERM, encerrando servidor...');
+  console.log('Recebido SIGTERM, encerrando servidor...');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('ðŸ›‘ Recebido SIGINT, encerrando servidor...');
+  console.log('Recebido SIGINT, encerrando servidor...');
   process.exit(0);
 });
 

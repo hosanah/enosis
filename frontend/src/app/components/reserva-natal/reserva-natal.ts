@@ -78,6 +78,8 @@ export class ReservaNatalComponent implements OnInit {
   mesaPage = 1;
   mesasFiltradas: { idmarcacaomesa?: number; nummesa: number; ordem: number; ocupados: number; quantidadetotal: number }[] = [];
   mesasPagina: { idmarcacaomesa?: number; nummesa: number; ordem: number; ocupados: number; quantidadetotal: number }[] = [];
+  mesaVagasFilter: number | null = null;
+  mesaVagasOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   reservasDaMesa: ReservaMesa[] = [];
   reservaMesaSelecionada: ReservaMesa | null = null;
@@ -286,7 +288,7 @@ export class ReservaNatalComponent implements OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Voucher',
-        detail: 'Selecione uma mesa válida para imprimir o voucher.'
+        detail: 'Selecione uma mesa valida para imprimir o voucher.'
       });
       return;
     }
@@ -298,16 +300,6 @@ export class ReservaNatalComponent implements OnInit {
     const hospede = (item?.nome_hospede || `Reserva ${item?.numreserva || ''}`).trim();
     const pessoas = item?.quantidade ?? item?.reservas ?? 0;
     const observacoes = item?.observacoes ?? '';
-
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
-    if (!printWindow) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Impressão',
-        detail: 'Não foi possí­vel abrir a janela de impressão.'
-      });
-      return;
-    }
 
     const css = `
       body {
@@ -345,29 +337,43 @@ export class ReservaNatalComponent implements OnInit {
             <h3 class="voucher-title">Voucher de Mesa</h3>
             <div class="voucher-field"><strong>Mesa:</strong> ${mesaNumero}</div>
             <div class="voucher-field"><strong>Apartamento:</strong> ${coduh}</div>
-            <div class="voucher-field"><strong>Hóspede:</strong> ${hospede}</div>
+            <div class="voucher-field"><strong>Hospede:</strong> ${hospede}</div>
             <div class="voucher-field"><strong>Pessoas:</strong> ${pessoas}</div>
             ${observacoes && observacoes.trim() !== '' 
             ? `<div class="voucher-field"><strong>Obs:</strong> ${observacoes}</div>`
-            : `<div class="voucher-field"><strong>Obs:</strong> Não há observações</div>`}
+            : `<div class="voucher-field"><strong>Obs:</strong> Nao ha observacoes</div>`}
           </div>
         </body>
       </html>
     `;
 
+    this.imprimirDuasVias(html);
+  }
+
+  private imprimirDuasVias(html: string): void {
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    if (!printWindow) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Impressao',
+        detail: 'Nao foi possivel abrir a janela de impressao.'
+      });
+      return;
+    }
+
     printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-  }
 
-  trackByMesa(index: number, mesa: string): string {
-    return mesa;
+    const dispararImpressao = () => printWindow.print();
+    dispararImpressao();
+    setTimeout(dispararImpressao, 500);
+    setTimeout(() => printWindow.close(), 1500);
   }
 
   mesaClass(m: { nummesa: number; ocupados: number; quantidadetotal: number }): any {
+
     const isSelected = this.mesaSelecionada === `Mesa ${m.nummesa}`;
     const classes: any = { selected: isSelected };
     if (m.ocupados === 0) {
@@ -403,6 +409,7 @@ export class ReservaNatalComponent implements OnInit {
 
   aplicarFiltroMesas(): void {
     const f = this.mesaFilter;
+    const vagas = this.mesaVagasFilter;
     this.mesasFiltradas = (this.mesas || [])
       .filter((m) => {
         const ocup = Number(m.ocupados || 0);
@@ -420,6 +427,18 @@ export class ReservaNatalComponent implements OnInit {
           default:
             return true;
         }
+      })
+      .filter((m) => {
+        if (vagas == null) {
+          return true;
+        }
+        const total = Number(m.quantidadetotal || 0);
+        const ocup = Number(m.ocupados || 0);
+        if (!Number.isFinite(total) || total <= 0) {
+          return false;
+        }
+        const disponiveis = Math.max(0, total - (Number.isFinite(ocup) ? ocup : 0));
+        return disponiveis === vagas;
       })
       .sort((a, b) => (a.ordem ?? a.nummesa) - (b.ordem ?? b.nummesa));
     this.mesaPage = 1;
@@ -440,6 +459,12 @@ export class ReservaNatalComponent implements OnInit {
   onMesaFilterChange(val: string): void {
     const allowed = new Set(['all', 'occupied', 'empty', 'partial']);
     this.mesaFilter = allowed.has(val) ? (val as any) : 'all';
+    this.aplicarFiltroMesas();
+  }
+
+  onMesaVagasChange(val: string | number): void {
+    const n = Number(val);
+    this.mesaVagasFilter = Number.isFinite(n) && n >= 1 && n <= 10 ? n : null;
     this.aplicarFiltroMesas();
   }
 
@@ -544,7 +569,6 @@ export class ReservaNatalComponent implements OnInit {
     window.print();
   }
 }
-
 
 
 

@@ -204,6 +204,12 @@
             <option value="partial">Parcialmente vagas</option>
             <option value="occupied">Somente ocupadas</option>
           </select>
+          <label>Vagas:</label>
+          <select class="p-inputtext" [value]="mesaVagasFilter ?? ''"
+            (change)="onMesaVagasChange($any($event.target).value)">
+            <option value="">Todas</option>
+            <option *ngFor="let v of mesaVagasOptions" [value]="v">{{v}}</option>
+          </select>
           <span class="spacer" style="flex:1 1 auto"></span>
           <label>Por vez:</label>
           <select class="p-inputtext" [value]="mesaPageSize" (change)="onMesaPageSizeChange($any($event.target).value)">

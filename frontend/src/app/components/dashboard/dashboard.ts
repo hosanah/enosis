@@ -5,7 +5,7 @@
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, interval, takeUntil } from 'rxjs';
 
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
@@ -30,7 +30,9 @@ import { ApiService } from '../../services/api';
 export class DashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   dashboardData: any = null;
+  lastUpdated: Date | null = null;
   isLoading = true;
+  readonly refreshIntervalMs = 30000;
 
   private destroy$ = new Subject<void>();
 
@@ -43,6 +45,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
     this.loadDashboardData();
+    this.startAutoRefresh();
 
     this.authService.authState$
       .pipe(takeUntil(this.destroy$))
@@ -56,24 +59,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadDashboardData(): void {
-    this.isLoading = true;
+  loadDashboardData(options: { showLoading?: boolean; showToast?: boolean } = {}): void {
+    const { showLoading = true, showToast = true } = options;
+
+    if (showLoading) {
+      this.isLoading = true;
+    }
 
     this.apiService.getDashboardData().subscribe({
       next: (response) => {
         this.dashboardData = response.data;
+        this.lastUpdated = new Date();
         this.isLoading = false;
 
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Dashboard carregado',
-          detail: 'Dados atualizados com sucesso'
-        });
+        if (showToast) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Dashboard carregado',
+            detail: 'Dados atualizados com sucesso'
+          });
+        }
       },
       error: (error) => {
         this.isLoading = false;
         console.error('Erro ao carregar dashboard:', error);
       }
     });
+  }
+
+  private startAutoRefresh(): void {
+    interval(this.refreshIntervalMs)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadDashboardData({ showLoading: false, showToast: false });
+      });
   }
 }
