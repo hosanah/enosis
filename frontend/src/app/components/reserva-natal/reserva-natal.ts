@@ -322,6 +322,26 @@ export class ReservaNatalComponent implements OnInit {
         margin-bottom: 4px;
         line-height: 1.2;
       }
+      .voucher-divider {
+        margin: 10px 0;
+        border-top: 1px dashed #bbb;
+      }
+      .voucher-orientacao-title {
+        font-weight: 600;
+        margin: 6px 0 4px;
+      }
+      .voucher-orientacao {
+        margin: 0 0 6px 16px;
+        padding: 0;
+      }
+      .voucher-orientacao li {
+        margin-bottom: 2px;
+      }
+      .voucher-footer-msg {
+        margin-top: 6px;
+        font-weight: 600;
+        text-align: center;
+      }
     `;
 
     const html = `
@@ -342,7 +362,18 @@ export class ReservaNatalComponent implements OnInit {
             ${observacoes && observacoes.trim() !== '' 
             ? `<div class="voucher-field"><strong>Obs:</strong> ${observacoes}</div>`
             : `<div class="voucher-field"><strong>Obs:</strong> Nao ha observacoes</div>`}
-          </div>
+            <div class="voucher-divider"></div>
+            <div class="voucher-orientacao-title">Instruções de acesso</div>
+            <ul class="voucher-orientacao">
+              <li><b>Entrada pelo Splash: </b></li>
+              <li>Reservas das Pracas 1, 2, 3 e 4</li>
+              <li><b>Entrada pela Piscina de Ondas</b></li>
+              <li>Reservas do Lounge</li>
+              <li>Reservas das Pracas 5 e 6</li>
+              <li>Reservas da Arena</li>
+            </ul>
+            <div class="voucher-footer-msg">A familia Enotel deseja um Feliz Natal!</div>
+          </div>        
         </body>
       </html>
     `;
