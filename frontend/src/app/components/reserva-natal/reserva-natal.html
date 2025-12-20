@@ -164,6 +164,34 @@
                   Hospedes:</strong> {{ reservaSelecionada.total_hospedes ?? reservaSelecionada.qtd_hospedes }}</div>
             </div>
           </div>
+          <div class="reserva-info" *ngIf="isLoadingMarcacoesReserva">
+            <div class="subtitle" style="font-weight:600; margin-bottom:.25rem;">Marcações existentes</div>
+            <div>Buscando marcações para esta reserva...</div>
+          </div>
+          <div class="reserva-info" *ngIf="!isLoadingMarcacoesReserva && marcacoesDaReserva.length">
+            <div class="subtitle" style="font-weight:600; margin-bottom:.5rem;">Marcações existentes</div>
+            <div class="reservas-mesa-list">
+              <p-message *ngFor="let m of marcacoesDaReserva; trackBy: trackByMesaItem" severity="info"
+                class="reserva-item">
+                <div class="reserva-message-content">
+                  <div class="reserva-message-text">
+                    <strong>Mesa:</strong> {{ m.nummesa || 'N/A' }} |
+                    <strong>Pessoas:</strong> {{ m.quantidade ?? m.reservas ?? '-' }}
+                    <span *ngIf="m.observacoes">&nbsp;|&nbsp;<strong>Obs:</strong> {{ m.observacoes }}</span>
+                  </div>
+
+                  <div class="reserva-message-actions">
+                    <button pButton type="button" class="p-button-sm" (click)="onCancelarMarcacaoReserva(m)">
+                      Cancelar
+                    </button>
+                    <button pButton type="button" class="p-button-sm p-button-secondary" icon="pi pi-print"
+                      (click)="onReimprimirMarcacao(m)">
+                    </button>
+                  </div>
+                </div>
+              </p-message>
+            </div>
+          </div>
         </div>
 
           <!-- Reservas vinculadas na mesa selecionada -->
@@ -210,6 +238,9 @@
             <option value="">Todas</option>
             <option *ngFor="let v of mesaVagasOptions" [value]="v">{{v}}</option>
           </select>
+          <label>Mesas:</label>
+          <input class="p-inputtext" type="text" [value]="mesaNumerosFiltro" (input)="onMesaNumerosChange($any($event.target).value)"
+            placeholder="Ex: 301,302" pTooltip="Filtrar por n·mero da mesa (separe por vÌrgula)" tooltipPosition="top" />
           <span class="spacer" style="flex:1 1 auto"></span>
           <label>Por vez:</label>
           <select class="p-inputtext" [value]="mesaPageSize" (change)="onMesaPageSizeChange($any($event.target).value)">

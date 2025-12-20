@@ -67,4 +67,19 @@ export class ReservaNatalService {
   cancelarMarcacao(payload: { idreservasfront: number; idmarcacaomesa: number }) {
     return this.http.post<{ ok: boolean; afetados: number }>(`${this.API}/natal/marcacoes/cancelar`, payload);
   }
+
+  getMarcacoesPorReserva(idreservasfront: number) {
+    return this.http.get<{
+      data: {
+        idreservasfront: number;
+        idmarcacaomesa?: number;
+        nummesa?: number;
+        quantidade?: number;
+        numreserva?: string;
+        coduh?: string;
+        nome_hospede?: string;
+        observacoes?: string | null;
+      }[];
+    }>(`${this.API}/natal/marcacoes/reserva/${idreservasfront}`);
+  }
 }

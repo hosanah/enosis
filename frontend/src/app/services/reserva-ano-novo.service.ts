@@ -91,5 +91,19 @@ export class ReservaAnoNovoService {
       payload
     );
   }
-}
 
+  getMarcacoesPorReserva(idreservasfront: number) {
+    return this.http.get<{
+      data: {
+        idreservasfront: number;
+        idmarcacaomesa?: number;
+        nummesa?: number;
+        quantidade?: number;
+        numreserva?: string;
+        coduh?: string;
+        nome_hospede?: string;
+        observacoes?: string | null;
+      }[];
+    }>(`${this.API}/anonovo/marcacoes/reserva/${idreservasfront}`);
+  }
+}

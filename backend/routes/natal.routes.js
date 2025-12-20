@@ -86,7 +86,7 @@ router.get('/reservas', async (req, res) => {
   }
 });
 
-// GET /natal/mesas - ocupação das mesas
+// GET /natal/mesas - ocupaÃ§Ã£o das mesas
 router.get('/mesas', async (req, res) => {
   try {
     const sql = `
@@ -113,15 +113,15 @@ router.get('/mesas', async (req, res) => {
   }
 });
 
-// GET /natal/mesas/:id/reservas - reservas vinculadas à mesa
+// GET /natal/mesas/:id/reservas - reservas vinculadas Ã  mesa
 router.get('/mesas/:id/reservas', async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!id || Number.isNaN(id)) {
-      return res.status(400).json({ error: 'ID de mesa inválido' });
+      return res.status(400).json({ error: 'ID de mesa invÃ¡lido' });
     }
     const db = getOracle();
-    // Consulta para exibir reservas/apartamentos da mesa com observação
+    // Consulta para exibir reservas/apartamentos da mesa com observaÃ§Ã£o
     const sql = `
       SELECT 
           EI.IDMARCACAOMESA,
@@ -160,12 +160,67 @@ router.get('/mesas/:id/reservas', async (req, res) => {
   }
 });
 
+
+// GET /natal/marcacoes/reserva/:id - marcacoes existentes para a reserva (idreservasfront)
+router.get('/marcacoes/reserva/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id || Number.isNaN(id)) {
+      return res.status(400).json({ error: 'ID da reserva invalido.' });
+    }
+
+    const db = getOracle();
+    const sql = `
+      SELECT 
+        EI.IDRESERVASFRONT,
+        EI.IDMARCACAOMESA,
+        EM.NUMMESA,
+        RF.NUMRESERVA,
+        RF.CODUH,
+        H.NOME || ' ' || H.SOBRENOME AS NOMECOMPLETO,
+        COUNT(EI.IDMARCACAOITEM) AS QUANTIDADE,
+        MAX(EI.DESCRICAO) AS OBSERVACOES
+      FROM CM.ENOMARCACAOITEM EI
+      JOIN CM.ENOMARCACAOMESA EM ON EM.IDMARCACAOMESA = EI.IDMARCACAOMESA
+      JOIN CM.RESERVASFRONT RF ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
+      JOIN CM.MOVIMENTOHOSPEDES MH ON MH.IDRESERVASFRONT = RF.IDRESERVASFRONT
+      JOIN CM.HOSPEDE H ON H.IDHOSPEDE = MH.IDHOSPEDE
+      WHERE MH.PRINCIPAL = 'S'
+        AND EI.IDRESERVASFRONT = ?
+      GROUP BY 
+        EI.IDRESERVASFRONT,
+        EI.IDMARCACAOMESA,
+        EM.NUMMESA,
+        RF.NUMRESERVA,
+        RF.CODUH,
+        H.NOME || ' ' || H.SOBRENOME
+    `;
+
+    const { rows } = await db.query(sql, [id]);
+    const data = (rows || []).map((r) => ({
+      idreservasfront: r.IDRESERVASFRONT ?? r.idreservasfront,
+      idmarcacaomesa: r.IDMARCACAOMESA ?? r.idmarcacaomesa,
+      nummesa: r.NUMMESA ?? r.nummesa,
+      numreserva: r.NUMRESERVA ?? r.numreserva,
+      coduh: r.CODUH ?? r.coduh,
+      nome_hospede: r.NOMECOMPLETO ?? r.nomecompleto,
+      quantidade: r.QUANTIDADE ?? r.quantidade,
+      observacoes: r.OBSERVACOES ?? r.observacoes ?? null
+    }));
+
+    return res.json({ data });
+  } catch (err) {
+    console.error('Erro ao buscar marcacoes da reserva:', err);
+    res.status(500).json({ error: 'Falha ao consultar marcacoes da reserva.' });
+  }
+});
+
 // POST /natal/marcacoes - marcar itens livres da mesa para a reserva
 router.post('/marcacoes', async (req, res) => {
   try {
     const { idreservasfront, quantidade, idmarcacaomesa, observacao } = req.body || {};
     if (!idreservasfront || !idmarcacaomesa || !quantidade || quantidade <= 0) {
-      return res.status(400).json({ error: 'Parâmetros inválidos. Envie idreservasfront, idmarcacaomesa e quantidade (>0).' });
+      return res.status(400).json({ error: 'ParÃ¢metros invÃ¡lidos. Envie idreservasfront, idmarcacaomesa e quantidade (>0).' });
     }
 
     const db = getOracle();
@@ -212,18 +267,18 @@ router.post('/marcacoes', async (req, res) => {
 
     return res.json({ ok: true, atualizados, solicitados: quantidade });
   } catch (err) {
-    console.error('Erro ao salvar marcação:', err);
-    res.status(500).json({ error: 'Falha ao salvar marcação.' });
+    console.error('Erro ao salvar marcaÃ§Ã£o:', err);
+    res.status(500).json({ error: 'Falha ao salvar marcaÃ§Ã£o.' });
   }
 });
 
-// POST /natal/marcacoes/cancelar - cancelar marcações de uma reserva em uma mesa
+// POST /natal/marcacoes/cancelar - cancelar marcaÃ§Ãµes de uma reserva em uma mesa
 router.post('/marcacoes/cancelar', async (req, res) => {
   try {
     const { idmarcacaomesa, idreservasfront } = req.body || {};
     if (!idmarcacaomesa || !idreservasfront) {
       return res.status(400).json({
-        error: 'Parâmetros inválidos. Envie idmarcacaomesa e idreservasfront.'
+        error: 'ParÃ¢metros invÃ¡lidos. Envie idmarcacaomesa e idreservasfront.'
       });
     }
 
@@ -245,8 +300,8 @@ router.post('/marcacoes/cancelar', async (req, res) => {
 
     return res.json({ ok: true, afetados });
   } catch (err) {
-    console.error('Erro ao cancelar marcação:', err);
-    res.status(500).json({ error: 'Falha ao cancelar marcação.' });
+    console.error('Erro ao cancelar marcaÃ§Ã£o:', err);
+    res.status(500).json({ error: 'Falha ao cancelar marcaÃ§Ã£o.' });
   }
 });
 

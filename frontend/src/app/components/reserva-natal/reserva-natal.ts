@@ -25,14 +25,16 @@ type Reserva = {
 
 type ReservaMesa = {
   idreservasfront?: number;
+  idmarcacaomesa?: number;
   quantidade?: number;
   reservas?: number;
   numreserva?: string;
+  nummesa?: number;
   coduh?: string;
   data_checkin?: string;
   data_checkout?: string;
   nome_hospede?: string;
-  observacoes?: string;
+  observacoes?: string | null;
 };
 
 @Component({
@@ -79,11 +81,14 @@ export class ReservaNatalComponent implements OnInit {
   mesasFiltradas: { idmarcacaomesa?: number; nummesa: number; ordem: number; ocupados: number; quantidadetotal: number }[] = [];
   mesasPagina: { idmarcacaomesa?: number; nummesa: number; ordem: number; ocupados: number; quantidadetotal: number }[] = [];
   mesaVagasFilter: number | null = null;
+  mesaNumerosFiltro = '';
   mesaVagasOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   reservasDaMesa: ReservaMesa[] = [];
   reservaMesaSelecionada: ReservaMesa | null = null;
   isLoadingReservasMesa = false;
+  marcacoesDaReserva: ReservaMesa[] = [];
+  isLoadingMarcacoesReserva = false;
 
   constructor(
     private fb: FormBuilder,
@@ -187,7 +192,10 @@ export class ReservaNatalComponent implements OnInit {
 
   onSelecionarReserva(r: Reserva): void {
     this.reservaSelecionada = r;
-    this.isFiltrosCollapsed = true;
+    this.confirmForm.patchValue({
+      quantidade: r.total_hospedes ?? r.qtd_hospedes ?? 1
+    });
+    this.carregarMarcacoesDaReserva(r.id);
   }
 
   onSelecionarMesa(mesa: any): void {
@@ -284,7 +292,8 @@ export class ReservaNatalComponent implements OnInit {
   }
 
   onImprimirVoucherMesa(item: ReservaMesa): void {
-    if (!this.mesaSelecionadaInfo) {
+    const mesaNumero = this.mesaSelecionadaInfo?.nummesa ?? item?.nummesa ?? '';
+    if (!mesaNumero) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Voucher',
@@ -295,7 +304,6 @@ export class ReservaNatalComponent implements OnInit {
 
     this.reservaMesaSelecionada = item || null;
 
-    const mesaNumero = this.mesaSelecionadaInfo?.nummesa ?? '';
     const coduh = item?.coduh ?? '';
     const hospede = (item?.nome_hospede || `Reserva ${item?.numreserva || ''}`).trim();
     const pessoas = item?.quantidade ?? item?.reservas ?? 0;
@@ -365,12 +373,11 @@ export class ReservaNatalComponent implements OnInit {
             <div class="voucher-divider"></div>
             <div class="voucher-orientacao-title">Instruções de acesso</div>
             <ul class="voucher-orientacao">
-              <li><b>Entrada pelo Splash: </b></li>
-              <li>Reservas das Pracas 1, 2, 3 e 4</li>
+              <li><b>Entrada pelo Splash: </li>
+              <li>Mesas 01 a 156</li>
+              <li>Mesas 336 a 394</li>
               <li><b>Entrada pela Piscina de Ondas</b></li>
-              <li>Reservas do Lounge</li>
-              <li>Reservas das Pracas 5 e 6</li>
-              <li>Reservas da Arena</li>
+              <li>Mesas 157 a 335</li>
             </ul>
             <div class="voucher-footer-msg">A familia Enotel deseja um Feliz Natal!</div>
           </div>        
@@ -398,9 +405,78 @@ export class ReservaNatalComponent implements OnInit {
     printWindow.focus();
 
     const dispararImpressao = () => printWindow.print();
-    dispararImpressao();
-    setTimeout(dispararImpressao, 500);
-    setTimeout(() => printWindow.close(), 1500);
+    setTimeout(() => {
+      dispararImpressao();
+      setTimeout(() => printWindow.close(), 800);
+    }, 200);
+  }
+
+  private carregarMarcacoesDaReserva(idreservasfront: number): void {
+    this.marcacoesDaReserva = [];
+    this.isLoadingMarcacoesReserva = true;
+    this.service.getMarcacoesPorReserva(idreservasfront).subscribe({
+      next: (res) => {
+        this.marcacoesDaReserva = res.data || [];
+      },
+      error: () => {
+        this.marcacoesDaReserva = [];
+      },
+      complete: () => {
+        this.isLoadingMarcacoesReserva = false;
+      }
+    });
+  }
+
+  onCancelarMarcacaoReserva(m: ReservaMesa): void {
+    if (!m?.idreservasfront || !m?.idmarcacaomesa) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cancelar',
+        detail: 'Marcacao invalida para cancelar.'
+      });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      header: 'Cancelar marcacao',
+      message: 'Deseja cancelar a marcacao existente para esta reserva?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sim, cancelar',
+      rejectLabel: 'Nao',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        const payload = {
+          idreservasfront: m.idreservasfront as number,
+          idmarcacaomesa: m.idmarcacaomesa as number
+        };
+        this.service.cancelarMarcacao(payload).subscribe({
+          next: (res) => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Reserva',
+              detail: `Marcacao cancelada (${res.afetados} registro(s)).`
+            });
+            this.carregarMarcacoesDaReserva(m.idreservasfront as number);
+            this.carregarMesas();
+          },
+          error: (err) => {
+            const msg = err?.error?.error || 'Falha ao cancelar a marcacao.';
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: msg });
+          }
+        });
+      }
+    });
+  }
+
+  onReimprimirMarcacao(m: ReservaMesa): void {
+    this.onImprimirVoucherMesa({
+      ...m,
+      nummesa: m.nummesa ?? this.mesaSelecionadaInfo?.nummesa,
+      nome_hospede: m.nome_hospede ?? this.reservaSelecionada?.nome_hospede,
+      coduh: m.coduh ?? this.reservaSelecionada?.coduh,
+      numreserva: m.numreserva ?? this.reservaSelecionada?.numreserva
+    });
   }
 
   mesaClass(m: { nummesa: number; ocupados: number; quantidadetotal: number }): any {
@@ -417,8 +493,8 @@ export class ReservaNatalComponent implements OnInit {
     return classes;
   }
 
-  trackByMesaItem(index: number, m: { nummesa?: number; idreservasfront?: number }): number | string {
-    return m.nummesa ?? m.idreservasfront ?? index;
+  trackByMesaItem(index: number, m: { nummesa?: number; idreservasfront?: number; idmarcacaomesa?: number }): number | string {
+    return m.idmarcacaomesa ?? m.nummesa ?? m.idreservasfront ?? index;
   }
 
   get reservaSelecionadaTexto(): string {
@@ -428,6 +504,8 @@ export class ReservaNatalComponent implements OnInit {
 
   onLimparReserva(): void {
     this.reservaSelecionada = null;
+    this.marcacoesDaReserva = [];
+    this.isLoadingMarcacoesReserva = false;
   }
 
   onLimparMesa(): void {
@@ -441,6 +519,12 @@ export class ReservaNatalComponent implements OnInit {
   aplicarFiltroMesas(): void {
     const f = this.mesaFilter;
     const vagas = this.mesaVagasFilter;
+    const numeros = (this.mesaNumerosFiltro || '')
+      .split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => Number.isFinite(n));
+    const numerosSet = new Set(numeros);
+
     this.mesasFiltradas = (this.mesas || [])
       .filter((m) => {
         const ocup = Number(m.ocupados || 0);
@@ -471,6 +555,12 @@ export class ReservaNatalComponent implements OnInit {
         const disponiveis = Math.max(0, total - (Number.isFinite(ocup) ? ocup : 0));
         return disponiveis === vagas;
       })
+      .filter((m) => {
+        if (!numerosSet.size) {
+          return true;
+        }
+        return numerosSet.has(Number(m.nummesa));
+      })
       .sort((a, b) => (a.ordem ?? a.nummesa) - (b.ordem ?? b.nummesa));
     this.mesaPage = 1;
     this.atualizarPaginaMesas();
@@ -496,6 +586,11 @@ export class ReservaNatalComponent implements OnInit {
   onMesaVagasChange(val: string | number): void {
     const n = Number(val);
     this.mesaVagasFilter = Number.isFinite(n) && n >= 1 && n <= 10 ? n : null;
+    this.aplicarFiltroMesas();
+  }
+
+  onMesaNumerosChange(val: string): void {
+    this.mesaNumerosFiltro = String(val || '').trim();
     this.aplicarFiltroMesas();
   }
 
@@ -572,6 +667,8 @@ export class ReservaNatalComponent implements OnInit {
         this.mesaSelecionadaInfo = null;
         this.reservasDaMesa = [];
         this.reservaMesaSelecionada = null;
+        this.marcacoesDaReserva = [];
+        this.isLoadingMarcacoesReserva = false;
       },
       error: (err) => {
         const msg = err?.error?.error || "Falha ao salvar marcacao.";
@@ -589,6 +686,9 @@ export class ReservaNatalComponent implements OnInit {
     this.reservasDaMesa = [];
     this.reservaMesaSelecionada = null;
     this.mesasDisponiveis = [];
+    this.marcacoesDaReserva = [];
+    this.isLoadingMarcacoesReserva = false;
+    this.mesaNumerosFiltro = '';
     this.messageService.add({
       severity: 'info',
       summary: 'Limpo',
