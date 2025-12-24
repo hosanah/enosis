@@ -47,4 +47,14 @@ export class RelatoriosComponent {
     const url = `${this.apiUrl}/anonovo/relatorios/uh-por-mesa?idhotel=${this.idhotel}`;
     this.abrirPdf(url);
   }
+
+  abrirRelatorioNatalUhsSemMarcacao(): void {
+    const url = `${this.apiUrl}/natal/relatorios/uhs-sem-marcacao?idhotel=${this.idhotel}`;
+    this.abrirPdf(url);
+  }
+
+  abrirRelatorioAnoNovoUhsSemMarcacao(): void {
+    const url = `${this.apiUrl}/anonovo/relatorios/uhs-sem-marcacao?idhotel=${this.idhotel}`;
+    this.abrirPdf(url);
+  }
 }

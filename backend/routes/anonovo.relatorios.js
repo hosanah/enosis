@@ -4,6 +4,203 @@ const { getOracle } = require('../config/oracle');
 const PDFDocument = require('pdfkit');
 const path = require('path');
 
+async function getResumoVagas(db) {
+  const resumoSql = `
+    SELECT
+      NVL((SELECT SUM(QUANTIDADE) FROM CM.ENOMARCACAOMESAANO), 0) AS TOTAL_VAGAS,
+      NVL((SELECT COUNT(1) FROM CM.ENOMARCACAOITEMANO WHERE STATUS = 1), 0) AS TOTAL_OCUPADAS
+    FROM DUAL
+  `;
+  const { rows } = await db.query(resumoSql, []);
+  const resumo = (rows || [])[0] || {};
+
+  const marcacoesSql = `
+    SELECT
+      TRUNC(UPDATE_AT) AS DIA,
+      COUNT(1) AS TOTAL
+    FROM CM.ENOMARCACAOITEMANO
+    WHERE STATUS = 1
+      AND UPDATE_AT IS NOT NULL
+    GROUP BY TRUNC(UPDATE_AT)
+    ORDER BY TRUNC(UPDATE_AT)
+  `;
+  const { rows: marcRows } = await db.query(marcacoesSql, []);
+  const marcacoesPorDia = (marcRows || []).map((r) => ({
+    dia: r.DIA ?? r.dia ?? null,
+    total: r.TOTAL ?? r.total ?? 0
+  }));
+
+  return {
+    totalVagas: resumo.TOTAL_VAGAS ?? resumo.total_vagas ?? 0,
+    totalOcupadas: resumo.TOTAL_OCUPADAS ?? resumo.total_ocupadas ?? 0,
+    marcacoesPorDia
+  };
+}
+
+function desenharSumario(doc, totalVagas, totalOcupadas, marcacoesPorDia) {
+  doc.addPage();
+  doc.font('Helvetica-Bold').fontSize(16).fillColor('#000000');
+  doc.text('Sumario de Vagas', 40, 80, { align: 'left' });
+  doc.font('Helvetica').fontSize(12);
+  doc.text(`Total de vagas: ${totalVagas}`, 60, 120);
+  doc.text(`Total de vagas ocupadas: ${totalOcupadas}`, 60, 140);
+
+  doc.font('Helvetica-Bold').fontSize(12);
+  doc.text('Marcacoes por dia', 40, 180, { align: 'left' });
+  doc.font('Helvetica').fontSize(10);
+
+  let y = 200;
+  (marcacoesPorDia || []).forEach((item) => {
+    const diaValor = item.dia;
+    const diaStr =
+      diaValor instanceof Date
+        ? diaValor.toLocaleDateString('pt-BR')
+        : String(diaValor || '-');
+    doc.text(`${diaStr}: ${item.total ?? 0}`, 60, y);
+    y += 14;
+  });
+}
+
+async function getUhsSemMarcacao(db, idhotel) {
+  const buildSql = (telefoneExpr) => `
+    WITH RESERVAS_BASE AS (
+      SELECT
+        RV.IDRESERVASFRONT,
+        RV.NUMRESERVA,
+        RV.CODUH,
+        RV.IDHOTEL,
+        H.NOME,
+        H.SOBRENOME,
+        ${telefoneExpr} AS TELEFONE
+      FROM CM.RESERVASFRONT RV
+      JOIN CM.MOVIMENTOHOSPEDES MH
+        ON MH.IDRESERVASFRONT = RV.IDRESERVASFRONT
+      JOIN CM.HOSPEDE H
+        ON H.IDHOSPEDE = MH.IDHOSPEDE
+      WHERE MH.PRINCIPAL = 'S'
+        AND RV.STATUSRESERVA = 2
+        AND RV.IDHOTEL = ?
+    )
+    SELECT
+      R.IDRESERVASFRONT,
+      R.NUMRESERVA,
+      R.CODUH,
+      R.NOME,
+      R.SOBRENOME,
+      R.TELEFONE,
+      'Nao' AS MARCACAO
+    FROM RESERVAS_BASE R
+    WHERE NOT EXISTS (
+      SELECT 1
+        FROM CM.ENOMARCACAOITEMANO EI
+       WHERE EI.IDRESERVASFRONT = R.IDRESERVASFRONT
+         AND EI.STATUS = 1
+    )
+    ORDER BY R.CODUH
+  `;
+
+  const telefoneVariacoes = ['H.TELEFONE', 'H.TELEFONE1', 'H.CELULAR', 'NULL'];
+
+  for (const telExpr of telefoneVariacoes) {
+    try {
+      const { rows } = await db.query(buildSql(telExpr), [idhotel]);
+      return rows || [];
+    } catch (err) {
+      const msg = (err && err.message) || '';
+      if (msg.includes('ORA-00904') || msg.toUpperCase().includes('INVALID IDENTIFIER')) {
+        console.warn(`Coluna de telefone indisponivel (${telExpr}), tentando variacao seguinte.`);
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  return [];
+}
+
+function gerarPdfUhsSemMarcacao(res, data, nomeArquivo, titulo) {
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${nomeArquivo}.pdf"`);
+
+  const doc = new PDFDocument({ margin: 40 });
+  doc.pipe(res);
+
+  const colWidths = [70, 60, 80, 120, 120, 65];
+  const headers = ['Reserva', 'UH', 'Marcacao', 'Nome', 'Sobrenome', 'Telefone'];
+
+  function drawHeader(showLogo = false) {
+    let y = 40;
+
+    if (showLogo) {
+      try {
+        const logoPath = path.join(__dirname, '../uploads/LogoZapChat.png');
+        doc.image(logoPath, 40, 30, { width: 100, height: 40 });
+      } catch (e) {
+        console.log('Logo nao encontrada');
+      }
+
+      doc.font('Helvetica-Bold').fontSize(16);
+      doc.text(titulo, 150, 40, { align: 'left' });
+
+      doc.font('Helvetica').fontSize(10);
+      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 150, 60);
+
+      y = 100;
+    }
+
+    doc.font('Helvetica-Bold').fontSize(10);
+    doc.rect(40, y, 515, 25).fillAndStroke('#EEEEEE', '#000000');
+    doc.fillColor('#000000');
+
+    let x = 40;
+    headers.forEach((h, idx) => {
+      doc.text(h, x + 6, y + 8, { width: colWidths[idx], continued: false });
+      x += colWidths[idx];
+    });
+
+    doc.font('Helvetica');
+    return y + 25;
+  }
+
+  let currentY = drawHeader(true);
+
+  if (!data || data.length === 0) {
+    doc.text('Nenhuma UH encontrada sem marcacao.', 40, currentY + 20);
+    doc.end();
+    return;
+  }
+
+  const bottomMargin = 60;
+  const rowHeight = 22;
+
+  data.forEach((r) => {
+    if (currentY + rowHeight > doc.page.height - bottomMargin) {
+      doc.addPage();
+      currentY = drawHeader(false);
+    }
+
+    const reserva = r.NUMRESERVA ?? r.numreserva ?? '-';
+    const uh = r.CODUH ?? r.coduh ?? '-';
+    const marcacao = r.MARCACAO ?? r.marcacao ?? '-';
+    const nome = r.NOME ?? r.nome ?? '-';
+    const sobrenome = r.SOBRENOME ?? r.sobrenome ?? '-';
+    const telefone = r.TELEFONE ?? r.telefone ?? '-';
+
+    doc.rect(40, currentY, 515, rowHeight).stroke('#CCCCCC');
+
+    let x = 40;
+    const valores = [reserva, uh, marcacao, nome, sobrenome, telefone];
+    valores.forEach((valor, idx) => {
+      doc.text(String(valor || '-'), x + 6, currentY + 6, { width: colWidths[idx], continued: false });
+      x += colWidths[idx];
+    });
+
+    currentY += rowHeight;
+  });
+
+  doc.end();
+}
+
 // GET /anonovo/relatorios/mesas-por-uh
 // Relatório PDF: listagem de mesas por UH (Ano Novo)
 router.get('/mesas-por-uh', async (req, res) => {
@@ -89,6 +286,7 @@ router.get('/mesas-por-uh', async (req, res) => {
 
     const { rows } = await db.query(sql, [idhotel]);
     const data = rows || [];
+    const { totalVagas, totalOcupadas, marcacoesPorDia } = await getResumoVagas(db);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
@@ -246,6 +444,8 @@ router.get('/mesas-por-uh', async (req, res) => {
       currentY += rowHeight;
     });
 
+    desenharSumario(doc, totalVagas, totalOcupadas, marcacoesPorDia);
+
     doc.end();
 
   } catch (err) {
@@ -257,7 +457,7 @@ router.get('/mesas-por-uh', async (req, res) => {
 });
 
 // GET /anonovo/relatorios/uh-por-mesa
-// RelatÃ³rio PDF: listagem de UHs por mesa (Ano Novo)
+// Relatório PDF: listagem de UHs por mesa (Ano Novo)
 router.get('/uh-por-mesa', async (req, res) => {
   try {
     const db = getOracle();
@@ -338,6 +538,7 @@ router.get('/uh-por-mesa', async (req, res) => {
 
     const { rows } = await db.query(sql, [idhotel, idhotel]);
     const data = rows || [];
+    const { totalVagas, totalOcupadas, marcacoesPorDia } = await getResumoVagas(db);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
@@ -360,7 +561,7 @@ router.get('/uh-por-mesa', async (req, res) => {
         }
 
         doc.font('Helvetica-Bold').fontSize(16);
-        doc.text('RelatÃ³rio - UHs por Mesa (Ano Novo)', 150, 40, { align: 'left' });
+        doc.text('Relatório - UHs por Mesa (Ano Novo)', 150, 40, { align: 'left' });
 
         doc.font('Helvetica').fontSize(10);
         doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 150, 60);
@@ -445,13 +646,37 @@ router.get('/uh-por-mesa', async (req, res) => {
       currentY += rowHeight;
     });
 
+    desenharSumario(doc, totalVagas, totalOcupadas, marcacoesPorDia);
+
     doc.end();
 
   } catch (err) {
     console.error('Erro ao gerar relatorio uh-por-mesa (Ano Novo):', err);
     res
       .status(500)
-      .json({ error: 'Falha ao gerar relatÃ³rio de UH por mesa (Ano Novo).' });
+      .json({ error: 'Falha ao gerar Relatório de UH por mesa (Ano Novo).' });
+  }
+});
+
+// GET /anonovo/relatorios/uhs-sem-marcacao
+// Relatorio PDF: UHs sem marcacao de mesa (Ano Novo)
+router.get('/uhs-sem-marcacao', async (req, res) => {
+  try {
+    const db = getOracle();
+    const idhotel = Number(req.query.idhotel || 1);
+    const data = await getUhsSemMarcacao(db, idhotel);
+
+    gerarPdfUhsSemMarcacao(
+      res,
+      data,
+      'relatorio-uhs-sem-marcacao-anonovo',
+      'Relatorio - UHs sem marcacao (Ano Novo)'
+    );
+  } catch (err) {
+    console.error('Erro ao gerar relatorio uhs-sem-marcacao (Ano Novo):', err);
+    res
+      .status(500)
+      .json({ error: 'Falha ao gerar Relatorio de UHs sem marcacao (Ano Novo).' });
   }
 });
 
