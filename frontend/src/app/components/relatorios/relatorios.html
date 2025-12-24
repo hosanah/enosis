@@ -14,14 +14,24 @@
           Listagem de mesas marcadas por unidade habitacional (UH) para o
           evento de Natal.
         </p>
-        <button
-          pButton
-          type="button"
-          class="p-button-sm"
-          (click)="abrirRelatorioNatal()"
-        >
-          Abrir PDF
-        </button>
+        <div class="actions">
+          <button
+            pButton
+            type="button"
+            class="p-button-sm"
+            (click)="abrirRelatorioNatal()"
+          >
+            Abrir PDF
+          </button>
+          <button
+            pButton
+            type="button"
+            class="p-button-sm p-button-secondary"
+            (click)="baixarRelatorioNatalExcel()"
+          >
+            Baixar Excel
+          </button>
+        </div>
       </div>
 
       <div class="relatorio-card">
@@ -30,14 +40,24 @@
           Listagem de mesas marcadas por unidade habitacional (UH) para o
           evento de Ano Novo.
         </p>
-        <button
-          pButton
-          type="button"
-          class="p-button-sm"
-          (click)="abrirRelatorioAnoNovo()"
-        >
-          Abrir PDF
-        </button>
+        <div class="actions">
+          <button
+            pButton
+            type="button"
+            class="p-button-sm"
+            (click)="abrirRelatorioAnoNovo()"
+          >
+            Abrir PDF
+          </button>
+          <button
+            pButton
+            type="button"
+            class="p-button-sm p-button-secondary"
+            (click)="baixarRelatorioAnoNovoExcel()"
+          >
+            Baixar Excel
+          </button>
+        </div>
       </div>
 
       <div class="relatorio-card">
@@ -45,14 +65,24 @@
         <p>
           Listagem de UHs marcadas por mesa para o evento de Natal.
         </p>
-        <button
-          pButton
-          type="button"
-          class="p-button-sm"
-          (click)="abrirRelatorioNatalUhsPorMesa()"
-        >
-          Abrir PDF
-        </button>
+        <div class="actions">
+          <button
+            pButton
+            type="button"
+            class="p-button-sm"
+            (click)="abrirRelatorioNatalUhsPorMesa()"
+          >
+            Abrir PDF
+          </button>
+          <button
+            pButton
+            type="button"
+            class="p-button-sm p-button-secondary"
+            (click)="baixarRelatorioNatalUhsPorMesaExcel()"
+          >
+            Baixar Excel
+          </button>
+        </div>
       </div>
 
       <div class="relatorio-card">
@@ -60,14 +90,24 @@
         <p>
           Listagem de UHs marcadas por mesa para o evento de Ano Novo.
         </p>
-        <button
-          pButton
-          type="button"
-          class="p-button-sm"
-          (click)="abrirRelatorioAnoNovoUhsPorMesa()"
-        >
-          Abrir PDF
-        </button>
+        <div class="actions">
+          <button
+            pButton
+            type="button"
+            class="p-button-sm"
+            (click)="abrirRelatorioAnoNovoUhsPorMesa()"
+          >
+            Abrir PDF
+          </button>
+          <button
+            pButton
+            type="button"
+            class="p-button-sm p-button-secondary"
+            (click)="baixarRelatorioAnoNovoUhsPorMesaExcel()"
+          >
+            Baixar Excel
+          </button>
+        </div>
       </div>
 
       <div class="relatorio-card">
@@ -76,14 +116,24 @@
           Apartamentos em check-in para o Natal que ainda nao possuem marcacao
           de mesa.
         </p>
-        <button
-          pButton
-          type="button"
-          class="p-button-sm"
-          (click)="abrirRelatorioNatalUhsSemMarcacao()"
-        >
-          Abrir PDF
-        </button>
+        <div class="actions">
+          <button
+            pButton
+            type="button"
+            class="p-button-sm"
+            (click)="abrirRelatorioNatalUhsSemMarcacao()"
+          >
+            Abrir PDF
+          </button>
+          <button
+            pButton
+            type="button"
+            class="p-button-sm p-button-secondary"
+            (click)="baixarRelatorioNatalUhsSemMarcacaoExcel()"
+          >
+            Baixar Excel
+          </button>
+        </div>
       </div>
 
       <div class="relatorio-card">
@@ -92,14 +142,24 @@
           Apartamentos em check-in para o Ano Novo que ainda nao possuem marcacao
           de mesa.
         </p>
-        <button
-          pButton
-          type="button"
-          class="p-button-sm"
-          (click)="abrirRelatorioAnoNovoUhsSemMarcacao()"
-        >
-          Abrir PDF
-        </button>
+        <div class="actions">
+          <button
+            pButton
+            type="button"
+            class="p-button-sm"
+            (click)="abrirRelatorioAnoNovoUhsSemMarcacao()"
+          >
+            Abrir PDF
+          </button>
+          <button
+            pButton
+            type="button"
+            class="p-button-sm p-button-secondary"
+            (click)="baixarRelatorioAnoNovoUhsSemMarcacaoExcel()"
+          >
+            Baixar Excel
+          </button>
+        </div>
       </div>
     </div>
   </div>

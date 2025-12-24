@@ -4,6 +4,22 @@ const { getOracle } = require('../config/oracle');
 const PDFDocument = require('pdfkit');
 const path = require('path');
 
+function csvEscape(value) {
+  if (value === null || value === undefined) return '';
+  const str = String(value).replace(/"/g, '""');
+  return /[",;\n]/.test(str) ? `"${str}"` : str;
+}
+
+function enviarCsv(res, headers, rows, filename) {
+  const linhas = [
+    headers.map(csvEscape).join(';'),
+    ...(rows || []).map((r) => (r || []).map(csvEscape).join(';'))
+  ];
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(linhas.join('\r\n'));
+}
+
 async function getResumoVagas(db) {
   const resumoSql = `
     SELECT
@@ -207,6 +223,7 @@ router.get('/mesas-por-uh', async (req, res) => {
   try {
     const db = getOracle();
     const idhotel = Number(req.query.idhotel || 1);
+    const formato = String(req.query.format || req.query.formato || '').toLowerCase();
 
     const sql = `
       -- 1) Mesas distintas
@@ -287,6 +304,42 @@ router.get('/mesas-por-uh', async (req, res) => {
     const { rows } = await db.query(sql, [idhotel]);
     const data = rows || [];
     const { totalVagas, totalOcupadas, marcacoesPorDia } = await getResumoVagas(db);
+
+    if (formato === 'excel') {
+      const csvRows = data.map((r) => {
+        const coduh = r.CODUH ?? r.coduh ?? '';
+        const mesas = [
+          r.MESA1 ?? r.mesa1 ?? '',
+          r.MESA2 ?? r.mesa2 ?? '',
+          r.MESA3 ?? r.mesa3 ?? '',
+          r.MESA4 ?? r.mesa4 ?? '',
+          r.MESA5 ?? r.mesa5 ?? '',
+          r.MESA6 ?? r.mesa6 ?? ''
+        ]
+          .filter((x) => x && x !== '')
+          .join(', ');
+        const quantidade = r.QUANTIDADE ?? r.quantidade ?? 0;
+        const obsText = [
+          r.OBS1 ?? r.obs1 ?? '',
+          r.OBS2 ?? r.obs2 ?? '',
+          r.OBS3 ?? r.obs3 ?? '',
+          r.OBS4 ?? r.obs4 ?? '',
+          r.OBS5 ?? r.obs5 ?? '',
+          r.OBS6 ?? r.obs6 ?? ''
+        ]
+          .filter((x) => x && String(x).trim() !== '')
+          .join(' | ');
+
+        return [coduh, mesas || '-', quantidade || 0, '', obsText || ''];
+      });
+
+      return enviarCsv(
+        res,
+        ['UH', 'Mesas', 'Qtd', 'Compareceu', 'Obs'],
+        csvRows,
+        'relatorio-mesas-por-uh-natal.csv'
+      );
+    }
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
@@ -462,6 +515,7 @@ router.get('/uh-por-mesa', async (req, res) => {
   try {
     const db = getOracle();
     const idhotel = Number(req.query.idhotel || 1);
+    const formato = String(req.query.format || req.query.formato || '').toLowerCase();
 
     const sql = `
       -- 1) UHs distintas por mesa
@@ -544,6 +598,42 @@ router.get('/uh-por-mesa', async (req, res) => {
     const { rows } = await db.query(sql, [idhotel, idhotel]);
     const data = rows || [];
     const { totalVagas, totalOcupadas, marcacoesPorDia } = await getResumoVagas(db);
+
+    if (formato === 'excel') {
+      const csvRows = data.map((r) => {
+        const mesa = r.NUMMESA ?? r.nummesa ?? '';
+        const uhsText = [
+          r.UH1 ?? r.uh1 ?? '',
+          r.UH2 ?? r.uh2 ?? '',
+          r.UH3 ?? r.uh3 ?? '',
+          r.UH4 ?? r.uh4 ?? '',
+          r.UH5 ?? r.uh5 ?? '',
+          r.UH6 ?? r.uh6 ?? ''
+        ]
+          .filter((x) => x && String(x).trim() !== '')
+          .join(', ');
+        const quantidade = r.QUANTIDADE ?? r.quantidade ?? 0;
+        const obsText = [
+          r.OBS1 ?? r.obs1 ?? '',
+          r.OBS2 ?? r.obs2 ?? '',
+          r.OBS3 ?? r.obs3 ?? '',
+          r.OBS4 ?? r.obs4 ?? '',
+          r.OBS5 ?? r.obs5 ?? '',
+          r.OBS6 ?? r.obs6 ?? ''
+        ]
+          .filter((x) => x && String(x).trim() !== '')
+          .join(' | ');
+
+        return [mesa, uhsText || '-', quantidade || 0, obsText || ''];
+      });
+
+      return enviarCsv(
+        res,
+        ['Mesa', 'UHs', 'Qtd UHs', 'Observacoes'],
+        csvRows,
+        'relatorio-uh-por-mesa-natal.csv'
+      );
+    }
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
@@ -669,7 +759,26 @@ router.get('/uhs-sem-marcacao', async (req, res) => {
   try {
     const db = getOracle();
     const idhotel = Number(req.query.idhotel || 1);
+    const formato = String(req.query.format || req.query.formato || '').toLowerCase();
     const data = await getUhsSemMarcacao(db, idhotel);
+
+    if (formato === 'excel') {
+      const csvRows = (data || []).map((r) => [
+        r.NUMRESERVA ?? r.numreserva ?? '-',
+        r.CODUH ?? r.coduh ?? '-',
+        r.MARCACAO ?? r.marcacao ?? 'Nao',
+        r.NOME ?? r.nome ?? '-',
+        r.SOBRENOME ?? r.sobrenome ?? '-',
+        r.TELEFONE ?? r.telefone ?? ''
+      ]);
+
+      return enviarCsv(
+        res,
+        ['Reserva', 'UH', 'Marcacao', 'Nome', 'Sobrenome', 'Telefone'],
+        csvRows,
+        'relatorio-uhs-sem-marcacao-natal.csv'
+      );
+    }
 
     gerarPdfUhsSemMarcacao(
       res,

@@ -28,6 +28,19 @@ export class RelatoriosComponent {
       });
   }
 
+  private baixarArquivo(url: string, nome: string): void {
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const fileURL = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = fileURL;
+        link.download = nome;
+        link.click();
+        URL.revokeObjectURL(fileURL);
+      }
+    });
+  }
+
   abrirRelatorioNatal(): void {
     const url = `${this.apiUrl}/natal/relatorios/mesas-por-uh?idhotel=${this.idhotel}`;
     this.abrirPdf(url);
@@ -35,6 +48,11 @@ export class RelatoriosComponent {
 
   abrirRelatorioNatalUhsPorMesa(): void {
     const url = `${this.apiUrl}/natal/relatorios/uh-por-mesa?idhotel=${this.idhotel}`;
+    this.abrirPdf(url);
+  }
+
+  abrirRelatorioNatalUhsSemMarcacao(): void {
+    const url = `${this.apiUrl}/natal/relatorios/uhs-sem-marcacao?idhotel=${this.idhotel}`;
     this.abrirPdf(url);
   }
 
@@ -48,13 +66,38 @@ export class RelatoriosComponent {
     this.abrirPdf(url);
   }
 
-  abrirRelatorioNatalUhsSemMarcacao(): void {
-    const url = `${this.apiUrl}/natal/relatorios/uhs-sem-marcacao?idhotel=${this.idhotel}`;
-    this.abrirPdf(url);
+  baixarRelatorioNatalExcel(): void {
+    const url = `${this.apiUrl}/natal/relatorios/mesas-por-uh?idhotel=${this.idhotel}&format=excel`;
+    this.baixarArquivo(url, 'relatorio-mesas-por-uh-natal.csv');
+  }
+
+  baixarRelatorioAnoNovoExcel(): void {
+    const url = `${this.apiUrl}/anonovo/relatorios/mesas-por-uh?idhotel=${this.idhotel}&format=excel`;
+    this.baixarArquivo(url, 'relatorio-mesas-por-uh-anonovo.csv');
+  }
+
+  baixarRelatorioNatalUhsPorMesaExcel(): void {
+    const url = `${this.apiUrl}/natal/relatorios/uh-por-mesa?idhotel=${this.idhotel}&format=excel`;
+    this.baixarArquivo(url, 'relatorio-uh-por-mesa-natal.csv');
+  }
+
+  baixarRelatorioAnoNovoUhsPorMesaExcel(): void {
+    const url = `${this.apiUrl}/anonovo/relatorios/uh-por-mesa?idhotel=${this.idhotel}&format=excel`;
+    this.baixarArquivo(url, 'relatorio-uh-por-mesa-anonovo.csv');
   }
 
   abrirRelatorioAnoNovoUhsSemMarcacao(): void {
     const url = `${this.apiUrl}/anonovo/relatorios/uhs-sem-marcacao?idhotel=${this.idhotel}`;
     this.abrirPdf(url);
+  }
+
+  baixarRelatorioNatalUhsSemMarcacaoExcel(): void {
+    const url = `${this.apiUrl}/natal/relatorios/uhs-sem-marcacao?idhotel=${this.idhotel}&format=excel`;
+    this.baixarArquivo(url, 'relatorio-uhs-sem-marcacao-natal.csv');
+  }
+
+  baixarRelatorioAnoNovoUhsSemMarcacaoExcel(): void {
+    const url = `${this.apiUrl}/anonovo/relatorios/uhs-sem-marcacao?idhotel=${this.idhotel}&format=excel`;
+    this.baixarArquivo(url, 'relatorio-uhs-sem-marcacao-anonovo.csv');
   }
 }
