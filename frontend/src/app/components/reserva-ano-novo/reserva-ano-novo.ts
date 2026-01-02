@@ -565,6 +565,12 @@ export class ReservaAnoNovoComponent implements OnInit {
     const hospede = (item?.nome_hospede || `Reserva ${item?.numreserva || ''}`).trim();
     const pessoas = item?.quantidade ?? item?.reservas ?? 0;
     const observacoes = item?.observacoes ?? '';
+    const numeroMesaInt = Number(mesaNumero);
+    const instrucoes = this.getInstrucoesDeAcesso(numeroMesaInt);
+    const instrucoesHtml =
+      instrucoes.length > 0
+        ? instrucoes.map((txt) => `<li>${txt}</li>`).join('')
+        : '<li>Orientacao nao cadastrada para esta mesa.</li>';
 
     const css = `
       body {
@@ -628,13 +634,9 @@ export class ReservaAnoNovoComponent implements OnInit {
               ? `<div class="voucher-field"><strong>Obs:</strong> ${observacoes}</div>`
               : `<div class="voucher-field"><strong>Obs:</strong> Nenhuma observacao para a mesa</div>`}
             <div class="voucher-divider"></div>
-            <div class="voucher-orientacao-title">Instruções de acesso</div>
+            <div class="voucher-orientacao-title">Instrucoes de acesso</div>
             <ul class="voucher-orientacao">
-              <li><b>Entrada pelo Splash:</b></li>
-              <li>Mesas 01 a 156</li>
-              <li>Mesas 336 a 394</li>
-              <li><b>Entrada pela Piscina de Ondas</b></li>
-              <li>Mesas 157 a 335</li>
+              ${instrucoesHtml}
             </ul>
             <div class="voucher-footer-msg">A familia Enotel deseja um Feliz 2026!</div>
           </div>               
@@ -666,6 +668,39 @@ export class ReservaAnoNovoComponent implements OnInit {
       dispararImpressao();
       setTimeout(() => printWindow.close(), 800);
     }, 200);
+  }
+
+  private getInstrucoesDeAcesso(nummesa: number): string[] {
+    if (!Number.isFinite(nummesa) || nummesa <= 0) {
+      return [];
+    }
+
+    if (nummesa >= 258 && nummesa <= 288) {
+      return ['Mesas 258 a 288: Praca 7 - Entrada D (Arena)'];
+    }
+    if (nummesa >= 157 && nummesa <= 258) {
+      return ['Mesas 157 a 258: Lounge - Entradas B e C (Piscina de Ondas)'];
+    }
+    if (nummesa >= 114 && nummesa <= 156) {
+      return ['Mesas 114 a 156: Praca 5 e 6 - Entrada A (pelo Splash)'];
+    }
+    if (nummesa >= 65 && nummesa <= 113) {
+      return ['Mesas 65 a 113: Praca 3 e 4 - Entrada A (pelo Splash)'];
+    }
+    if (nummesa >= 1 && nummesa <= 64) {
+      return ['Mesas 01 a 64: Praca 1 e 2 - Entrada A (pelo Splash)'];
+    }
+    if (nummesa >= 289 && nummesa <= 335) {
+      return ['Mesas 289 a 335: Praca 10 (Esplanada) - Entrada D (Arena)'];
+    }
+    if (nummesa >= 336 && nummesa <= 366) {
+      return ['Mesas 336 a 366: Praca 8 - Entrada D (Arena)'];
+    }
+    if (nummesa >= 367 && nummesa <= 394) {
+      return ['Mesas 367 a 394: Praca 9 - Entrada D (Arena)'];
+    }
+
+    return ['Orientacao nao cadastrada para este numero de mesa.'];
   }
 
   private carregarMarcacoesDaReserva(idreservasfront: number): void {
@@ -737,3 +772,5 @@ export class ReservaAnoNovoComponent implements OnInit {
     });
   }
 }
+
+

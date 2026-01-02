@@ -87,7 +87,10 @@ async function getUhsSemMarcacao(db, idhotel) {
         RV.IDHOTEL,
         H.NOME,
         H.SOBRENOME,
-        ${telefoneExpr} AS TELEFONE
+        ${telefoneExpr} AS TELEFONE,
+        RV.DATACHEGPREVISTA,
+        RV.DATAPARTPREVISTA,
+        TRUNC(TO_DATE('24/12/' || EXTRACT(YEAR FROM RV.DATACHEGPREVISTA), 'DD/MM/YYYY')) AS TARGET_DIA
       FROM CM.RESERVASFRONT RV
       JOIN CM.MOVIMENTOHOSPEDES MH
         ON MH.IDRESERVASFRONT = RV.IDRESERVASFRONT
@@ -96,6 +99,8 @@ async function getUhsSemMarcacao(db, idhotel) {
       WHERE MH.PRINCIPAL = 'S'
         AND RV.STATUSRESERVA = 2
         AND RV.IDHOTEL = ?
+        AND TRUNC(TO_DATE('24/12/' || EXTRACT(YEAR FROM RV.DATACHEGPREVISTA), 'DD/MM/YYYY')) >= TRUNC(RV.DATACHEGPREVISTA)
+        AND TRUNC(TO_DATE('24/12/' || EXTRACT(YEAR FROM RV.DATACHEGPREVISTA), 'DD/MM/YYYY')) < TRUNC(RV.DATAPARTPREVISTA)
     )
     SELECT
       R.IDRESERVASFRONT,
@@ -103,6 +108,8 @@ async function getUhsSemMarcacao(db, idhotel) {
       R.CODUH,
       R.NOME,
       R.SOBRENOME,
+      R.DATACHEGPREVISTA,
+      R.DATAPARTPREVISTA,
       R.TELEFONE,
       'Nao' AS MARCACAO
     FROM RESERVAS_BASE R
@@ -141,8 +148,8 @@ function gerarPdfUhsSemMarcacao(res, data, nomeArquivo, titulo) {
   const doc = new PDFDocument({ margin: 40 });
   doc.pipe(res);
 
-  const colWidths = [70, 60, 80, 120, 120, 65];
-  const headers = ['Reserva', 'UH', 'Marcacao', 'Nome', 'Sobrenome', 'Telefone'];
+  const colWidths = [70, 60, 80, 80, 60, 100, 90];
+  const headers = ['Reserva', 'UH', 'Check-in', 'Check-out', 'Marcacao', 'Nome', 'Sobrenome'];
 
   function drawHeader(showLogo = false) {
     let y = 40;
@@ -200,12 +207,21 @@ function gerarPdfUhsSemMarcacao(res, data, nomeArquivo, titulo) {
     const marcacao = r.MARCACAO ?? r.marcacao ?? '-';
     const nome = r.NOME ?? r.nome ?? '-';
     const sobrenome = r.SOBRENOME ?? r.sobrenome ?? '-';
-    const telefone = r.TELEFONE ?? r.telefone ?? '-';
+    const checkinVal = r.DATACHEGPREVISTA ?? r.datachegprevista ?? '';
+    const checkoutVal = r.DATAPARTPREVISTA ?? r.datapartprevista ?? '';
+    const checkin =
+      checkinVal instanceof Date
+        ? checkinVal.toLocaleDateString('pt-BR')
+        : String(checkinVal || '');
+    const checkout =
+      checkoutVal instanceof Date
+        ? checkoutVal.toLocaleDateString('pt-BR')
+        : String(checkoutVal || '');
 
     doc.rect(40, currentY, 515, rowHeight).stroke('#CCCCCC');
 
     let x = 40;
-    const valores = [reserva, uh, marcacao, nome, sobrenome, telefone];
+    const valores = [reserva, uh, checkin, checkout, marcacao, nome, sobrenome];
     valores.forEach((valor, idx) => {
       doc.text(String(valor || '-'), x + 6, currentY + 6, { width: colWidths[idx], continued: false });
       x += colWidths[idx];
@@ -766,15 +782,16 @@ router.get('/uhs-sem-marcacao', async (req, res) => {
       const csvRows = (data || []).map((r) => [
         r.NUMRESERVA ?? r.numreserva ?? '-',
         r.CODUH ?? r.coduh ?? '-',
+        r.DATACHEGPREVISTA ?? r.datachegprevista ?? '',
+        r.DATAPARTPREVISTA ?? r.datapartprevista ?? '',
         r.MARCACAO ?? r.marcacao ?? 'Nao',
         r.NOME ?? r.nome ?? '-',
-        r.SOBRENOME ?? r.sobrenome ?? '-',
-        r.TELEFONE ?? r.telefone ?? ''
+        r.SOBRENOME ?? r.sobrenome ?? '-'
       ]);
 
       return enviarCsv(
         res,
-        ['Reserva', 'UH', 'Marcacao', 'Nome', 'Sobrenome', 'Telefone'],
+        ['Reserva', 'UH', 'Data Checkin', 'Data Checkout', 'Marcacao', 'Nome', 'Sobrenome'],
         csvRows,
         'relatorio-uhs-sem-marcacao-natal.csv'
       );
