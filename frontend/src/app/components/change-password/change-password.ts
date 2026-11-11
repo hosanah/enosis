@@ -5,15 +5,13 @@ import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, PasswordModule, ButtonModule, ToastModule],
-  providers: [MessageService],
+  imports: [CommonModule, FormsModule, CardModule, PasswordModule, ButtonModule],
   templateUrl: './change-password.html',
   styleUrls: ['./change-password.scss']
 })

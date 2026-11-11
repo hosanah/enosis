@@ -19,4 +19,18 @@
   </p-table>
 </p-card>
 
-<p-toast></p-toast>
+<p-card header="Ação ao concluir a marcação" *ngIf="whatsappConfig as config">
+  <div class="whatsapp-action-settings">
+    <label for="whatsapp-action">Ao concluir a marcação</label>
+    <select id="whatsapp-action" [(ngModel)]="config.action">
+      <option value="print">Imprimir voucher</option>
+      <option value="send">Enviar WhatsApp</option>
+      <option value="both">Enviar WhatsApp e imprimir</option>
+    </select>
+    <button type="button" (click)="salvarAcaoWhatsApp()" [disabled]="savingWhatsAppAction">
+      {{ savingWhatsAppAction ? 'Salvando…' : 'Salvar configuração' }}
+    </button>
+  </div>
+</p-card>
+
+

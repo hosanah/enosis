@@ -5,12 +5,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-import { ToastModule } from 'primeng/toast';
 import { MessageModule } from 'primeng/message';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CardModule } from 'primeng/card';
 import { ReservaAnoNovoService } from '../../services/reserva-ano-novo.service';
+import { WhatsAppConfirmationComponent } from '../whatsapp/whatsapp-confirmation';
 
 type Reserva = {
   id: number;
@@ -21,6 +21,7 @@ type Reserva = {
   qtd_hospedes?: number;
   total_hospedes?: number;
   numreserva?: string;
+  telefone?: string;
 };
 
 type ReservaMesa = {
@@ -34,6 +35,7 @@ type ReservaMesa = {
   data_checkin?: string;
   data_checkout?: string;
   nome_hospede?: string;
+  telefone?: string;
   observacoes?: string | null;
 };
 
@@ -47,16 +49,19 @@ type ReservaMesa = {
     ButtonModule,
     TableModule,
     TooltipModule,
-    ToastModule,
     MessageModule,
     ConfirmDialogModule,
-    CardModule
+    CardModule,
+    WhatsAppConfirmationComponent
   ],
   templateUrl: './reserva-ano-novo.html',
   styleUrls: ['./reserva-ano-novo.scss'],
   providers: [ConfirmationService]
 })
 export class ReservaAnoNovoComponent implements OnInit {
+  whatsappVisible = false;
+  whatsappResendMode = false;
+  completedBooking: ReservaMesa | null = null;
   filtroForm: FormGroup;
   confirmForm: FormGroup;
 
@@ -181,6 +186,7 @@ export class ReservaAnoNovoComponent implements OnInit {
             id: r.id,
             numreserva: (r as any).numreserva ?? undefined,
             nome_hospede: r.nome_hospede,
+            telefone: r.telefone || '',
             coduh: r.coduh,
             data_checkin: r.data_checkin ? new Date(r.data_checkin) : null,
             data_checkout: r.data_checkout ? new Date(r.data_checkout) : null,
@@ -488,9 +494,13 @@ export class ReservaAnoNovoComponent implements OnInit {
           numreserva: r.numreserva,
           coduh: r.coduh,
           nome_hospede: r.nome_hospede,
+          telefone: r.telefone,
+          nummesa: this.mesaSelecionadaInfo?.nummesa,
           observacoes: String(this.confirmForm.value.observacoes || '')
         };
-        this.onImprimirVoucherMesa(itemVoucher);
+        this.completedBooking = itemVoucher;
+        this.whatsappResendMode = false;
+        this.whatsappVisible = true;
 
         this.carregarMesas();
         this.filtroForm.reset({
@@ -770,6 +780,18 @@ export class ReservaAnoNovoComponent implements OnInit {
       coduh: m.coduh ?? this.reservaSelecionada?.coduh,
       numreserva: m.numreserva ?? this.reservaSelecionada?.numreserva
     });
+  }
+
+  onReenviarWhatsapp(item: ReservaMesa): void {
+    this.completedBooking = {
+      ...item,
+      nome_hospede: item.nome_hospede ?? this.reservaSelecionada?.nome_hospede,
+      coduh: item.coduh ?? this.reservaSelecionada?.coduh,
+      numreserva: item.numreserva ?? this.reservaSelecionada?.numreserva,
+      telefone: item.telefone ?? this.reservaSelecionada?.telefone ?? ''
+    };
+    this.whatsappResendMode = true;
+    this.whatsappVisible = true;
   }
 }
 

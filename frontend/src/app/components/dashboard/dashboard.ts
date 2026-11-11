@@ -8,7 +8,6 @@ import { CommonModule } from '@angular/common';
 import { Subject, interval, takeUntil } from 'rxjs';
 
 import { CardModule } from 'primeng/card';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SkeletonModule } from 'primeng/skeleton';
 
@@ -21,10 +20,8 @@ import { ApiService } from '../../services/api';
   imports: [
     CommonModule,
     CardModule,
-    ToastModule,
     SkeletonModule
   ],
-  providers: [MessageService],
   templateUrl: './dashboard.html',
 })
 export class DashboardComponent implements OnInit, OnDestroy {

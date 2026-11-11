@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getAuthDb } = require('../config/authdb');
 
-// Lista diretrizes; se vazio, cria padrões
+// Lista diretrizes; se vazio, cria padrÃµes
 router.get('/', async (req, res) => {
   try {
     const db = getAuthDb();
@@ -17,8 +17,8 @@ router.get('/', async (req, res) => {
       const defaults = [
         {
           code: 'PERMITIR_QUANTIDADE_MAIOR_HOSPEDES',
-          nome: 'Permite cadastro de reserva com número informado maior que número de hóspedes no apartamento',
-          descricao: 'Quando habilitada, permite marcar quantidade de lugares maior do que o número de hóspedes da reserva.',
+          nome: 'Permite cadastro de reserva com nÃºmero informado maior que nÃºmero de hÃ³spedes no apartamento',
+          descricao: 'Quando habilitada, permite marcar quantidade de lugares maior do que o nÃºmero de hÃ³spedes da reserva.',
           valor: 'true',
           habilitado: 1
         },
@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
       }
     }
 
-    // Garante que só as duas diretrizes desejadas existam
+    // Garante que sÃ³ as duas diretrizes desejadas existam
     const allowedCodes = [
       'PERMITIR_QUANTIDADE_MAIOR_HOSPEDES',
       'PERMITIR_APTO_MULTI_RESERVAS'
@@ -73,7 +73,7 @@ router.patch('/:code', async (req, res) => {
     const { code } = req.params;
     const { habilitado } = req.body || {};
     if (typeof habilitado !== 'boolean') {
-      return res.status(400).json({ error: 'Campo habilitado é obrigatório e deve ser booleano.' });
+      return res.status(400).json({ error: 'Campo habilitado Ã© obrigatÃ³rio e deve ser booleano.' });
     }
     const db = getAuthDb();
 
@@ -83,7 +83,7 @@ router.patch('/:code', async (req, res) => {
         resolve(!!row);
       });
     });
-    if (!exists) return res.status(404).json({ error: 'Diretriz não encontrada.' });
+    if (!exists) return res.status(404).json({ error: 'Diretriz nÃ£o encontrada.' });
 
     await new Promise((resolve, reject) => {
       db.run('UPDATE diretrizes SET habilitado = ?, updated_at = CURRENT_TIMESTAMP WHERE code = ?', [habilitado ? 1 : 0, code], (err) => {

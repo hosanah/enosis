@@ -15,6 +15,7 @@ RUN npm install
 
 # Copiar todo o código do backend
 COPY backend/ ./
+COPY frontend/public/logotipo.png ./assets/logotipo.png
 
 # Estágio de produção
 FROM node:20-alpine
@@ -32,9 +33,11 @@ COPY --from=builder /backend/config ./config
 COPY --from=builder /backend/database ./database
 COPY --from=builder /backend/middleware ./middleware
 COPY --from=builder /backend/routes ./routes
+COPY --from=builder /backend/services ./services
 COPY --from=builder /backend/server.js ./
 COPY --from=builder /backend/swagger.json ./
 COPY --from=builder /backend/models ./models
+COPY --from=builder /backend/assets ./assets
 
 # Variáveis de ambiente padrão (podem ser sobrescritas)
 ENV PORT=3001 \

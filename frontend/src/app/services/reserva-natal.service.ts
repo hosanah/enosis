@@ -55,6 +55,7 @@ export class ReservaNatalService {
         data_checkin?: string;
         data_checkout?: string;
         nome_hospede?: string;
+        telefone?: string;
         observacoes?: string | null;
       }[];
     }>(`${this.API}/natal/mesas/${idmarcacaomesa}/reservas`);
@@ -78,6 +79,7 @@ export class ReservaNatalService {
         numreserva?: string;
         coduh?: string;
         nome_hospede?: string;
+        telefone?: string;
         observacoes?: string | null;
       }[];
     }>(`${this.API}/natal/marcacoes/reserva/${idreservasfront}`);

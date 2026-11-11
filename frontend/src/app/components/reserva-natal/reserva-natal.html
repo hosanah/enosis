@@ -1,5 +1,6 @@
 <div class="reserva-natal page">
-  <p-toast></p-toast>  <p-confirmDialog></p-confirmDialog>
+    <p-confirmDialog></p-confirmDialog>
+  <app-whatsapp-confirmation [(visible)]="whatsappVisible" [booking]="completedBooking" [allowResend]="whatsappResendMode" evento="natal" (printRequested)="onImprimirVoucherMesa($event)"></app-whatsapp-confirmation>
   <!-- Painel 1 – Filtros de Reserva -->
   <div class="card">
     <div class="section-header">
@@ -110,7 +111,7 @@
           <div class="field col-12">
             <label>Reserva selecionada</label>
             <div style="display:flex; gap:.5rem; align-items:center;">
-              <input pInputText [value]="reservaSelecionadaTexto" readonly pTooltip="Defina uma reserva na lista acima"
+              <input type="text" pInputText [value]="reservaSelecionadaTexto" [disabled]="true" pTooltip="Defina uma reserva na lista acima"
                 tooltipPosition="top" />
               <button pButton type="button" class="p-button-text p-button-sm" (click)="onLimparReserva()"
                 [disabled]="!reservaSelecionada">
@@ -121,7 +122,7 @@
           <div class="field col-12">
             <label>Mesa selecionada</label>
             <div style="display:flex; gap:.5rem; align-items:center;">
-              <input pInputText [value]="mesaSelecionada || ''" readonly pTooltip="Selecione uma mesa ao lado"
+              <input type="text" pInputText [value]="mesaSelecionada || ''" [disabled]="true" pTooltip="Selecione uma mesa ao lado"
                 tooltipPosition="top" />
               <button pButton type="button" class="p-button-text p-button-sm" (click)="onLimparMesa()"
                 [disabled]="!mesaSelecionada">
@@ -181,11 +182,14 @@
                   </div>
 
                   <div class="reserva-message-actions">
-                    <button pButton type="button" class="p-button-sm" (click)="onCancelarMarcacaoReserva(m)">
-                      Cancelar
+                    <button pButton type="button" class="p-button-sm p-button-danger p-button-text p-button-icon-only" icon="pi pi-times"
+                      aria-label="Cancelar marcação" title="Cancelar marcação" (click)="onCancelarMarcacaoReserva(m)">
                     </button>
                     <button pButton type="button" class="p-button-sm p-button-secondary" icon="pi pi-print"
                       (click)="onReimprimirMarcacao(m)">
+                    </button>
+                    <button pButton type="button" class="p-button-sm p-button-success" icon="pi pi-whatsapp"
+                      aria-label="Reenviar WhatsApp" title="Reenviar WhatsApp" (click)="onReenviarWhatsapp(m)">
                     </button>
                   </div>
                 </div>
@@ -209,13 +213,15 @@
                     para {{ r.quantidade ?? r.reservas }} pessoa(s)
                   </div>
 
-                  <button pButton type="button" class="p-button-sm"
-                    (click)="onExcluirReservaMesa(r)">
-                    Cancelar
+                  <button pButton type="button" class="p-button-sm p-button-danger p-button-text p-button-icon-only" icon="pi pi-times"
+                    aria-label="Cancelar reserva da mesa" title="Cancelar reserva da mesa" (click)="onExcluirReservaMesa(r)">
                   </button>
                   <button pButton type="button" class="p-button-sm p-button-secondary"
                     icon="pi pi-print"
                     (click)="onImprimirVoucherMesa(r)">
+                  </button>
+                  <button pButton type="button" class="p-button-sm p-button-success" icon="pi pi-whatsapp"
+                    aria-label="Reenviar WhatsApp" title="Reenviar WhatsApp" (click)="onReenviarWhatsapp(r)">
                   </button>
                 </div>
               </p-message>

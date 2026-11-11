@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getOracle } = require('../config/oracle');
 const PDFDocument = require('pdfkit');
-const path = require('path');
+const { COLORS, getEnotelLogoPath, drawReportHeader, drawTableHeaderBackground, drawSummaryCard } = require('../services/report-branding');
 
 function csvEscape(value) {
   if (value === null || value === undefined) return '';
@@ -55,25 +55,21 @@ async function getResumoVagas(db) {
 
 function desenharSumario(doc, totalVagas, totalOcupadas, marcacoesPorDia) {
   doc.addPage();
-  doc.font('Helvetica-Bold').fontSize(16).fillColor('#000000');
-  doc.text('Sumario de Vagas', 40, 80, { align: 'left' });
-  doc.font('Helvetica').fontSize(12);
-  doc.text(`Total de vagas: ${totalVagas}`, 60, 120);
-  doc.text(`Total de vagas ocupadas: ${totalOcupadas}`, 60, 140);
-
-  doc.font('Helvetica-Bold').fontSize(12);
-  doc.text('Marcacoes por dia', 40, 180, { align: 'left' });
-  doc.font('Helvetica').fontSize(10);
-
-  let y = 200;
+  drawReportHeader(doc, 'Resumo de vagas', 'Visão geral das marcações');
+  drawSummaryCard(doc, 40, 126, 245, 'Total de vagas', totalVagas);
+  drawSummaryCard(doc, 300, 126, 245, 'Vagas ocupadas', totalOcupadas);
+  doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.navy).text('Marcações por dia', 40, 205);
+  let y = 229;
   (marcacoesPorDia || []).forEach((item) => {
     const diaValor = item.dia;
     const diaStr =
       diaValor instanceof Date
         ? diaValor.toLocaleDateString('pt-BR')
         : String(diaValor || '-');
-    doc.text(`${diaStr}: ${item.total ?? 0}`, 60, y);
-    y += 14;
+    if (Math.floor((y - 229) / 22) % 2 === 0) doc.rect(40, y - 4, 505, 21).fill('#F8FAFC');
+    doc.font('Helvetica').fontSize(9).fillColor(COLORS.text).text(diaStr, 52, y, { width: 300 });
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(COLORS.navy).text(String(item.total ?? 0), 450, y, { width: 80, align: 'right' });
+    y += 22;
   });
 }
 
@@ -156,24 +152,24 @@ function gerarPdfUhsSemMarcacao(res, data, nomeArquivo, titulo) {
 
     if (showLogo) {
       try {
-        const logoPath = path.join(__dirname, '../uploads/LogoZapChat.png');
-        doc.image(logoPath, 40, 30, { width: 100, height: 40 });
+        const logoPath = getEnotelLogoPath();
+        if (logoPath) doc.image(logoPath, 40, 28, { fit: [62, 62] });
       } catch (e) {
         console.log('Logo nao encontrada');
       }
 
-      doc.font('Helvetica-Bold').fontSize(16);
+      doc.font('Helvetica-Bold').fontSize(16).fillColor(COLORS.navy);
       doc.text(titulo, 150, 40, { align: 'left' });
 
-      doc.font('Helvetica').fontSize(10);
+      doc.font('Helvetica').fontSize(9).fillColor(COLORS.muted);
       doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 150, 60);
 
       y = 100;
     }
 
     doc.font('Helvetica-Bold').fontSize(10);
-    doc.rect(40, y, 515, 25).fillAndStroke('#EEEEEE', '#000000');
-    doc.fillColor('#000000');
+    drawTableHeaderBackground(doc, 40, y, 515, 25);
+    doc.fillColor(COLORS.navy);
 
     let x = 40;
     headers.forEach((h, idx) => {
@@ -196,7 +192,7 @@ function gerarPdfUhsSemMarcacao(res, data, nomeArquivo, titulo) {
   const bottomMargin = 60;
   const rowHeight = 22;
 
-  data.forEach((r) => {
+  data.forEach((r, index) => {
     if (currentY + rowHeight > doc.page.height - bottomMargin) {
       doc.addPage();
       currentY = drawHeader(false);
@@ -218,7 +214,7 @@ function gerarPdfUhsSemMarcacao(res, data, nomeArquivo, titulo) {
         ? checkoutVal.toLocaleDateString('pt-BR')
         : String(checkoutVal || '');
 
-    doc.rect(40, currentY, 515, rowHeight).stroke('#CCCCCC');
+    doc.rect(40, currentY, 515, rowHeight).fillAndStroke(index % 2 ? '#FFFFFF' : '#F8FAFC', COLORS.line);
 
     let x = 40;
     const valores = [reserva, uh, checkin, checkout, marcacao, nome, sobrenome];
@@ -372,16 +368,16 @@ router.get('/mesas-por-uh', async (req, res) => {
 
       if (showLogo) {
         try {
-          const logoPath = path.join(__dirname, '../uploads/LogoZapChat.png');
-          doc.image(logoPath, 40, 30, { width: 100, height: 40 });
+          const logoPath = getEnotelLogoPath();
+          if (logoPath) doc.image(logoPath, 40, 28, { fit: [62, 62] });
         } catch (e) {
           console.log('Logo não encontrada');
         }
 
-        doc.font('Helvetica-Bold').fontSize(16);
+        doc.font('Helvetica-Bold').fontSize(16).fillColor(COLORS.navy);
         doc.text('Relatório - Mesas por UH (Ano Novo)', 150, 40, { align: 'left' });
 
-        doc.font('Helvetica').fontSize(10);
+        doc.font('Helvetica').fontSize(9).fillColor(COLORS.muted);
         doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 150, 60);
 
         y = 100;
@@ -391,10 +387,10 @@ router.get('/mesas-por-uh', async (req, res) => {
       doc.font('Helvetica-Bold').fontSize(10);
 
       // Fundo cinza do cabeçalho
-      doc.rect(40, y, 515, 25).fillAndStroke('#EEEEEE', '#000000');
+      drawTableHeaderBackground(doc, 40, y, 515, 25);
 
       // Texto do cabeçalho
-      doc.fillColor('#000000');
+      doc.fillColor(COLORS.navy);
       doc.text('UH', 50, y + 8, { width: 60, continued: false });
       doc.text('Mesas', 120, y + 8, { width: 260, continued: false });
       doc.text('Qtd', 390, y + 8, { width: 60, align: 'center', continued: false });
@@ -463,12 +459,12 @@ router.get('/mesas-por-uh', async (req, res) => {
       const rowStartY = currentY;
 
       // Desenha bordas da linha
-      doc.rect(40, rowStartY, 515, rowHeight).stroke('#CCCCCC');
+      doc.rect(40, rowStartY, 515, rowHeight).fillAndStroke(index % 2 ? '#FFFFFF' : '#F8FAFC', COLORS.line);
 
       // Linhas verticais para separar colunas
-      doc.moveTo(110, rowStartY).lineTo(110, rowStartY + rowHeight).stroke('#CCCCCC');
-      doc.moveTo(380, rowStartY).lineTo(380, rowStartY + rowHeight).stroke('#CCCCCC');
-      doc.moveTo(450, rowStartY).lineTo(450, rowStartY + rowHeight).stroke('#CCCCCC');
+      doc.moveTo(110, rowStartY).lineTo(110, rowStartY + rowHeight).stroke(COLORS.line);
+      doc.moveTo(380, rowStartY).lineTo(380, rowStartY + rowHeight).stroke(COLORS.line);
+      doc.moveTo(450, rowStartY).lineTo(450, rowStartY + rowHeight).stroke(COLORS.line);
 
       // Escreve conteúdo da linha
       doc.fillColor('#000000').fontSize(10);
@@ -660,25 +656,25 @@ router.get('/uh-por-mesa', async (req, res) => {
 
       if (showLogo) {
         try {
-          const logoPath = path.join(__dirname, '../uploads/LogoZapChat.png');
-          doc.image(logoPath, 40, 30, { width: 100, height: 40 });
+          const logoPath = getEnotelLogoPath();
+          if (logoPath) doc.image(logoPath, 40, 28, { fit: [62, 62] });
         } catch (e) {
-          console.log('Logo nÃ£o encontrada');
+          console.log('Logo não encontrada');
         }
 
-        doc.font('Helvetica-Bold').fontSize(16);
+        doc.font('Helvetica-Bold').fontSize(16).fillColor(COLORS.navy);
         doc.text('Relatório - UHs por Mesa (Ano Novo)', 150, 40, { align: 'left' });
 
-        doc.font('Helvetica').fontSize(10);
+        doc.font('Helvetica').fontSize(9).fillColor(COLORS.muted);
         doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 150, 60);
 
         y = 100;
       }
 
       doc.font('Helvetica-Bold').fontSize(10);
-      doc.rect(40, y, 515, 25).fillAndStroke('#EEEEEE', '#000000');
+      drawTableHeaderBackground(doc, 40, y, 515, 25);
 
-      doc.fillColor('#000000');
+      doc.fillColor(COLORS.navy);
       doc.text('Mesa', 50, y + 8, { width: 60, continued: false });
       doc.text('UHs', 120, y + 8, { width: 220, continued: false });
       doc.text('Qtd UHs', 360, y + 8, { width: 70, align: 'center', continued: false });
@@ -692,7 +688,7 @@ router.get('/uh-por-mesa', async (req, res) => {
     const bottomMargin = 60;
     const lineHeight = 15;
 
-    data.forEach((r) => {
+    data.forEach((r, index) => {
       const mesa = r.NUMMESA ?? r.nummesa ?? '';
 
       const uhsText = [
@@ -732,11 +728,11 @@ router.get('/uh-por-mesa', async (req, res) => {
       }
 
       const rowStartY = currentY;
-      doc.rect(40, rowStartY, 515, rowHeight).stroke('#CCCCCC');
+      doc.rect(40, rowStartY, 515, rowHeight).fillAndStroke(index % 2 ? '#FFFFFF' : '#F8FAFC', COLORS.line);
 
-      doc.moveTo(110, rowStartY).lineTo(110, rowStartY + rowHeight).stroke('#CCCCCC');
-      doc.moveTo(360, rowStartY).lineTo(360, rowStartY + rowHeight).stroke('#CCCCCC');
-      doc.moveTo(430, rowStartY).lineTo(430, rowStartY + rowHeight).stroke('#CCCCCC');
+      doc.moveTo(110, rowStartY).lineTo(110, rowStartY + rowHeight).stroke(COLORS.line);
+      doc.moveTo(360, rowStartY).lineTo(360, rowStartY + rowHeight).stroke(COLORS.line);
+      doc.moveTo(430, rowStartY).lineTo(430, rowStartY + rowHeight).stroke(COLORS.line);
 
       doc.fillColor('#000000').fontSize(10);
       doc.text(String(mesa), 50, rowStartY + 5, { width: 60, continued: false });

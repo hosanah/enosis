@@ -14,7 +14,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { CardModule } from 'primeng/card';
 import { MessageModule } from 'primeng/message';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { AuthService, LoginRequest } from '../../services/auth';
@@ -30,10 +29,8 @@ import { AuthService, LoginRequest } from '../../services/auth';
     PasswordModule,
     CardModule,
     MessageModule,
-    ToastModule,
     RouterModule
   ],
-  providers: [MessageService],
   templateUrl: './login.html',
   styleUrls: ['./login.scss'],
 })

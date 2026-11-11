@@ -3,6 +3,14 @@ const router = express.Router();
 const { getOracle } = require('../config/oracle');
 const { getAuthDb } = require('../config/authdb');
 
+const phoneExpr = `CASE
+    WHEN TEL.DDI IS NULL THEN NULL
+    WHEN SUBSTR(TRIM(TO_CHAR(TEL.DDI)), 1, 1) = '+' THEN TRIM(TO_CHAR(TEL.DDI))
+    ELSE '+' || TRIM(TO_CHAR(TEL.DDI))
+  END
+  || NVL(TRIM(TO_CHAR(TEL.DDD)), '')
+  || NVL(TRIM(TO_CHAR(TEL.NUMERO)), '')`;
+
 // GET /natal/reservas
 router.get('/reservas', async (req, res) => {
   try {
@@ -42,20 +50,26 @@ router.get('/reservas', async (req, res) => {
       params.push('%' + String(coduh).toUpperCase() + '%');
     }
 
-    const baseSql = `
+    const buildSql = () => `
       SELECT RV.IDRESERVASFRONT,
              RV.NUMRESERVA,
              RV.CODUH,
              RV.DATACHEGPREVISTA AS DATACHECKIN,
              RV.DATAPARTPREVISTA AS DATACHECKOUT,
              H.NOME || ' ' || H.SOBRENOME AS NOMECOMPLETO,
+             MAX(${phoneExpr}) AS TELEFONE,
              (SELECT COUNT(MH2.IDHOSPEDE)
                 FROM CM.MOVIMENTOHOSPEDES MH2
                WHERE MH2.IDRESERVASFRONT = RV.IDRESERVASFRONT) AS TOTALHOSPEDES
         FROM CM.RESERVASFRONT RV,
              CM.MOVIMENTOHOSPEDES MH,
              CM.HOSPEDE H
+        LEFT JOIN CM.VWENDERECO VE ON VE.IDPESSOA = H.IDHOSPEDE
+        LEFT JOIN CM.TELENDPESS TEL ON TEL.IDENDERECO = VE.IDENDERECO
        WHERE ${conditions.join(' AND ')}
+       GROUP BY RV.IDRESERVASFRONT, RV.NUMRESERVA, RV.CODUH,
+                RV.DATACHEGPREVISTA, RV.DATAPARTPREVISTA,
+                H.NOME || ' ' || H.SOBRENOME
        ORDER BY RV.DATACHEGPREVISTA DESC
        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY`;
 
@@ -75,7 +89,7 @@ router.get('/reservas', async (req, res) => {
       0;
 
     const dataParams = [...params, offset, size];
-    const { rows } = await db.query(baseSql, dataParams);
+    const { rows = [] } = await db.query(buildSql(), dataParams);
 
     const data = (rows || []).map((r) => ({
       id: r.IDRESERVASFRONT ?? r.idreservasfront ?? r.ID ?? r.id,
@@ -90,6 +104,7 @@ router.get('/reservas', async (req, res) => {
         r.nomecompleto ??
         r.NOME_HOSPEDE ??
         r.nome_hospede,
+      telefone: r.TELEFONE ?? r.telefone ?? '',
       total_hospedes: r.TOTALHOSPEDES ?? r.totalhospedes
     }));
 
@@ -134,17 +149,18 @@ router.get('/mesas/:id/reservas', async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!id || Number.isNaN(id)) {
-      return res.status(400).json({ error: 'ID de mesa invÃ¡lido.' });
+      return res.status(400).json({ error: 'ID de mesa inválido.' });
     }
     const db = getOracle();
     // Consulta para exibir reservas/apartamentos da mesa com observacao
-    const sql = `
+    const buildSql = () => `
       SELECT 
           EI.IDMARCACAOMESA,
           EI.IDRESERVASFRONT,
           RF.CODUH,
           EM.NUMMESA,
           H.NOME || ' ' || H.SOBRENOME AS NOMECOMPLETO,
+          MAX(${phoneExpr}) AS TELEFONE,
           COUNT(EI.IDMARCACAOITEM) AS QUANTIDADE,
           MAX(EI.DESCRICAO) AS OBSERVACOES
         FROM CM.ENOMARCACAOITEMANO EI
@@ -152,6 +168,8 @@ router.get('/mesas/:id/reservas', async (req, res) => {
         JOIN CM.RESERVASFRONT RF    ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
         JOIN CM.MOVIMENTOHOSPEDES MH ON MH.IDRESERVASFRONT = RF.IDRESERVASFRONT
         JOIN CM.HOSPEDE H ON H.IDHOSPEDE = MH.IDHOSPEDE
+        LEFT JOIN CM.VWENDERECO VE ON VE.IDPESSOA = H.IDHOSPEDE
+        LEFT JOIN CM.TELENDPESS TEL ON TEL.IDENDERECO = VE.IDENDERECO
        WHERE MH.PRINCIPAL = 'S'
          AND EM.IDMARCACAOMESA = ?
        GROUP BY 
@@ -160,12 +178,13 @@ router.get('/mesas/:id/reservas', async (req, res) => {
           RF.CODUH,
           EM.NUMMESA,
           H.NOME || ' ' || H.SOBRENOME`;
-    const { rows } = await db.query(sql, [id]);
+    const { rows } = await db.query(buildSql(), [id]);
     const data = (rows || []).map((r) => ({
       idreservasfront: r.IDRESERVASFRONT ?? r.idreservasfront,
       coduh: r.CODUH ?? r.coduh,
       nummesa: r.NUMMESA ?? r.nummesa,
       nome_hospede: r.NOMECOMPLETO ?? r.nomecompleto,
+      telefone: r.TELEFONE ?? r.telefone ?? '',
       quantidade: r.QUANTIDADE ?? r.quantidade,
       observacoes: r.OBSERVACOES ?? r.observacoes ?? null
     }));
@@ -186,7 +205,7 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
     }
 
     const db = getOracle();
-    const sql = `
+    const buildSql = () => `
       SELECT 
         EI.IDRESERVASFRONT,
         EI.IDMARCACAOMESA,
@@ -194,6 +213,7 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
         RF.NUMRESERVA,
         RF.CODUH,
         H.NOME || ' ' || H.SOBRENOME AS NOMECOMPLETO,
+        MAX(${phoneExpr}) AS TELEFONE,
         COUNT(EI.IDMARCACAOITEM) AS QUANTIDADE,
         MAX(EI.DESCRICAO) AS OBSERVACOES
       FROM CM.ENOMARCACAOITEMANO EI
@@ -201,6 +221,8 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
       JOIN CM.RESERVASFRONT RF ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
       JOIN CM.MOVIMENTOHOSPEDES MH ON MH.IDRESERVASFRONT = RF.IDRESERVASFRONT
       JOIN CM.HOSPEDE H ON H.IDHOSPEDE = MH.IDHOSPEDE
+      LEFT JOIN CM.VWENDERECO VE ON VE.IDPESSOA = H.IDHOSPEDE
+      LEFT JOIN CM.TELENDPESS TEL ON TEL.IDENDERECO = VE.IDENDERECO
       WHERE MH.PRINCIPAL = 'S'
         AND EI.IDRESERVASFRONT = ?
       GROUP BY 
@@ -212,7 +234,7 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
         H.NOME || ' ' || H.SOBRENOME
     `;
 
-    const { rows } = await db.query(sql, [id]);
+    const { rows } = await db.query(buildSql(), [id]);
     const data = (rows || []).map((r) => ({
       idreservasfront: r.IDRESERVASFRONT ?? r.idreservasfront,
       idmarcacaomesa: r.IDMARCACAOMESA ?? r.idmarcacaomesa,
@@ -220,6 +242,7 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
       numreserva: r.NUMRESERVA ?? r.numreserva,
       coduh: r.CODUH ?? r.coduh,
       nome_hospede: r.NOMECOMPLETO ?? r.nomecompleto,
+      telefone: r.TELEFONE ?? r.telefone ?? '',
       quantidade: r.QUANTIDADE ?? r.quantidade,
       observacoes: r.OBSERVACOES ?? r.observacoes ?? null
     }));
@@ -238,7 +261,7 @@ router.post('/marcacoes', async (req, res) => {
     if (!idreservasfront || !idmarcacaomesa || !quantidade || quantidade <= 0) {
       return res.status(400).json({
         error:
-          'ParÃ¢metros invÃ¡lidos. Envie idreservasfront, idmarcacaomesa e quantidade (>0).'
+          'Parâmetros inválidos. Envie idreservasfront, idmarcacaomesa e quantidade (>0).'
       });
     }
 
@@ -246,7 +269,7 @@ router.post('/marcacoes', async (req, res) => {
     const authDb = getAuthDb();
 
     // Diretriz PERMITIR_APTO_MULTI_RESERVAS:
-    // quando desabilitada, nÃ£o permite que a mesma reserva/apartamento tenha mais de uma marcaÃ§Ã£o
+    // quando desabilitada, não permite que a mesma reserva/apartamento tenha mais de uma marcação
     let permitirMultiReservas = false;
     try {
       const rows = await new Promise((resolve, reject) => {
@@ -266,7 +289,7 @@ router.post('/marcacoes', async (req, res) => {
       }
     } catch (e) {
       console.error('Erro ao consultar diretriz PERMITIR_APTO_MULTI_RESERVAS:', e);
-      // em caso de falha na leitura da diretriz, mantem o comportamento padrÃ£o (permitir)
+      // em caso de falha na leitura da diretriz, mantem o comportamento padrão (permitir)
     }
 
     if (permitirMultiReservas) {
@@ -285,7 +308,7 @@ router.post('/marcacoes', async (req, res) => {
       if (totalExistentes > 0) {
         return res.status(409).json({
           error:
-            'JÃ¡ existe marcaÃ§Ã£o de mesa para esta reserva e as diretrizes do sistema nÃ£o permitem mÃºltiplas reservas para o mesmo apartamento.'
+            'Já existe marcação de mesa para esta reserva e as diretrizes do sistema não permitem múltiplas reservas para o mesmo apartamento.'
         });
       }
     }
@@ -391,19 +414,19 @@ router.post('/marcacoes', async (req, res) => {
 
     return res.json({ ok: true, atualizados, solicitados: quantidade });
   } catch (err) {
-    console.error('Erro ao salvar marcaÃ§Ã£o:', err);
-    res.status(500).json({ error: 'Falha ao salvar marcaÃ§Ã£o.' });
+    console.error('Erro ao salvar marcação:', err);
+    res.status(500).json({ error: 'Falha ao salvar marcação.' });
   }
 });
 
-// POST /natal/marcacoes/cancelar - cancelar marcaÃ§Ãµes de uma reserva em uma mesa
+// POST /natal/marcacoes/cancelar - cancelar marcações de uma reserva em uma mesa
 router.post('/marcacoes/cancelar', async (req, res) => {
   try {
     const { idmarcacaomesa, idreservasfront } = req.body || {};
     if (!idmarcacaomesa || !idreservasfront) {
       return res.status(400).json({
         error:
-          'ParÃ¢metros invÃ¡lidos. Envie idmarcacaomesa e idreservasfront.'
+          'Parâmetros inválidos. Envie idmarcacaomesa e idreservasfront.'
       });
     }
 
@@ -427,8 +450,8 @@ router.post('/marcacoes/cancelar', async (req, res) => {
 
     return res.json({ ok: true, afetados });
   } catch (err) {
-    console.error('Erro ao cancelar marcaÃ§Ã£o:', err);
-    res.status(500).json({ error: 'Falha ao cancelar marcaÃ§Ã£o.' });
+    console.error('Erro ao cancelar marcação:', err);
+    res.status(500).json({ error: 'Falha ao cancelar marcação.' });
   }
 });
 

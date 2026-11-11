@@ -3,164 +3,72 @@
     <div class="header">
       <h2>Relatórios de Mesas</h2>
       <div class="subtitle">
-        Gere relatórios em PDF das marcações de mesas do Natal e Ano Novo.
+        Gere e baixe relatórios das marcações de mesas, organizados por evento.
       </div>
     </div>
 
-    <div class="grid">
-      <div class="relatorio-card">
-        <h3>Mesas por UH - Natal</h3>
-        <p>
-          Listagem de mesas marcadas por unidade habitacional (UH) para o
-          evento de Natal.
-        </p>
-        <div class="actions">
-          <button
-            pButton
-            type="button"
-            class="p-button-sm"
-            (click)="abrirRelatorioNatal()"
-          >
-            Abrir PDF
-          </button>
-          <button
-            pButton
-            type="button"
-            class="p-button-sm p-button-secondary"
-            (click)="baixarRelatorioNatalExcel()"
-          >
-            Baixar Excel
-          </button>
+    <section class="relatorio-section natal-section" aria-labelledby="relatorios-natal">
+      <h3 id="relatorios-natal" class="section-title"><span class="event-dot"></span>Natal</h3>
+      <div class="grid">
+        <div class="relatorio-card">
+          <h3>Mesas por UH</h3>
+          <p>Listagem de mesas marcadas por unidade habitacional (UH) para o evento de Natal.</p>
+          <div class="actions">
+            <button pButton type="button" class="p-button-sm" (click)="abrirRelatorioNatal()">Abrir PDF</button>
+            <button pButton type="button" class="p-button-sm p-button-secondary" (click)="baixarRelatorioNatalExcel()">Baixar Excel</button>
+          </div>
         </div>
-      </div>
 
-      <div class="relatorio-card">
-        <h3>Mesas por UH - Ano Novo</h3>
-        <p>
-          Listagem de mesas marcadas por unidade habitacional (UH) para o
-          evento de Ano Novo.
-        </p>
-        <div class="actions">
-          <button
-            pButton
-            type="button"
-            class="p-button-sm"
-            (click)="abrirRelatorioAnoNovo()"
-          >
-            Abrir PDF
-          </button>
-          <button
-            pButton
-            type="button"
-            class="p-button-sm p-button-secondary"
-            (click)="baixarRelatorioAnoNovoExcel()"
-          >
-            Baixar Excel
-          </button>
+        <div class="relatorio-card">
+          <h3>UH por Mesas</h3>
+          <p>Listagem de UHs marcadas por mesa para o evento de Natal.</p>
+          <div class="actions">
+            <button pButton type="button" class="p-button-sm" (click)="abrirRelatorioNatalUhsPorMesa()">Abrir PDF</button>
+            <button pButton type="button" class="p-button-sm p-button-secondary" (click)="baixarRelatorioNatalUhsPorMesaExcel()">Baixar Excel</button>
+          </div>
         </div>
-      </div>
 
-      <div class="relatorio-card">
-        <h3>UH por Mesas - Natal</h3>
-        <p>
-          Listagem de UHs marcadas por mesa para o evento de Natal.
-        </p>
-        <div class="actions">
-          <button
-            pButton
-            type="button"
-            class="p-button-sm"
-            (click)="abrirRelatorioNatalUhsPorMesa()"
-          >
-            Abrir PDF
-          </button>
-          <button
-            pButton
-            type="button"
-            class="p-button-sm p-button-secondary"
-            (click)="baixarRelatorioNatalUhsPorMesaExcel()"
-          >
-            Baixar Excel
-          </button>
+        <div class="relatorio-card">
+          <h3>UHs sem marcação</h3>
+          <p>Apartamentos em check-in para o Natal que ainda não possuem marcação de mesa.</p>
+          <div class="actions">
+            <button pButton type="button" class="p-button-sm" (click)="abrirRelatorioNatalUhsSemMarcacao()">Abrir PDF</button>
+            <button pButton type="button" class="p-button-sm p-button-secondary" (click)="baixarRelatorioNatalUhsSemMarcacaoExcel()">Baixar Excel</button>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="relatorio-card">
-        <h3>UH por Mesas - Ano Novo</h3>
-        <p>
-          Listagem de UHs marcadas por mesa para o evento de Ano Novo.
-        </p>
-        <div class="actions">
-          <button
-            pButton
-            type="button"
-            class="p-button-sm"
-            (click)="abrirRelatorioAnoNovoUhsPorMesa()"
-          >
-            Abrir PDF
-          </button>
-          <button
-            pButton
-            type="button"
-            class="p-button-sm p-button-secondary"
-            (click)="baixarRelatorioAnoNovoUhsPorMesaExcel()"
-          >
-            Baixar Excel
-          </button>
+    <section class="relatorio-section ano-novo-section" aria-labelledby="relatorios-ano-novo">
+      <h3 id="relatorios-ano-novo" class="section-title"><span class="event-dot"></span>Ano Novo</h3>
+      <div class="grid">
+        <div class="relatorio-card">
+          <h3>Mesas por UH</h3>
+          <p>Listagem de mesas marcadas por unidade habitacional (UH) para o evento de Ano Novo.</p>
+          <div class="actions">
+            <button pButton type="button" class="p-button-sm" (click)="abrirRelatorioAnoNovo()">Abrir PDF</button>
+            <button pButton type="button" class="p-button-sm p-button-secondary" (click)="baixarRelatorioAnoNovoExcel()">Baixar Excel</button>
+          </div>
         </div>
-      </div>
 
-      <div class="relatorio-card">
-        <h3>UHs sem marcacao - Natal</h3>
-        <p>
-          Apartamentos em check-in para o Natal que ainda nao possuem marcacao
-          de mesa.
-        </p>
-        <div class="actions">
-          <button
-            pButton
-            type="button"
-            class="p-button-sm"
-            (click)="abrirRelatorioNatalUhsSemMarcacao()"
-          >
-            Abrir PDF
-          </button>
-          <button
-            pButton
-            type="button"
-            class="p-button-sm p-button-secondary"
-            (click)="baixarRelatorioNatalUhsSemMarcacaoExcel()"
-          >
-            Baixar Excel
-          </button>
+        <div class="relatorio-card">
+          <h3>UH por Mesas</h3>
+          <p>Listagem de UHs marcadas por mesa para o evento de Ano Novo.</p>
+          <div class="actions">
+            <button pButton type="button" class="p-button-sm" (click)="abrirRelatorioAnoNovoUhsPorMesa()">Abrir PDF</button>
+            <button pButton type="button" class="p-button-sm p-button-secondary" (click)="baixarRelatorioAnoNovoUhsPorMesaExcel()">Baixar Excel</button>
+          </div>
         </div>
-      </div>
 
-      <div class="relatorio-card">
-        <h3>UHs sem marcacao - Ano Novo</h3>
-        <p>
-          Apartamentos em check-in para o Ano Novo que ainda nao possuem marcacao
-          de mesa.
-        </p>
-        <div class="actions">
-          <button
-            pButton
-            type="button"
-            class="p-button-sm"
-            (click)="abrirRelatorioAnoNovoUhsSemMarcacao()"
-          >
-            Abrir PDF
-          </button>
-          <button
-            pButton
-            type="button"
-            class="p-button-sm p-button-secondary"
-            (click)="baixarRelatorioAnoNovoUhsSemMarcacaoExcel()"
-          >
-            Baixar Excel
-          </button>
+        <div class="relatorio-card">
+          <h3>UHs sem marcação</h3>
+          <p>Apartamentos em check-in para o Ano Novo que ainda não possuem marcação de mesa.</p>
+          <div class="actions">
+            <button pButton type="button" class="p-button-sm" (click)="abrirRelatorioAnoNovoUhsSemMarcacao()">Abrir PDF</button>
+            <button pButton type="button" class="p-button-sm p-button-secondary" (click)="baixarRelatorioAnoNovoUhsSemMarcacaoExcel()">Baixar Excel</button>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </div>

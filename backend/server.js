@@ -1,6 +1,6 @@
 ﻿/**
  * Servidor principal da API Node.js com Express
- * Inclui autenticaÃ§Ã£o JWT, CORS e rotas protegidas
+ * Inclui autenticação JWT, CORS e rotas protegidas
  */
 
 require('dotenv').config();
@@ -24,13 +24,15 @@ const natalRoutes = require('./routes/natal.routes');
 const natalRelatoriosRoutes = require('./routes/natal.relatorios');
 const anonovoRoutes = require('./routes/anonovo.routes');
 const anonovoRelatoriosRoutes = require('./routes/anonovo.relatorios');
+const whatsappRoutes = require('./routes/whatsapp');
 
-// Importar middleware de autenticaÃ§Ã£o
+// Importar middleware de autenticação
 const { authenticateToken } = require('./middleware/auth');
 
-// Importar configuraÃ§Ã£o do banco de dados
+// Importar configuração do banco de dados
 const { initDatabase } = require('./config/database');
 const { initAuthDatabase } = require('./config/authdb');
+const { initWhatsApp } = require('./services/whatsapp');
 const { isOracleReady } = require('./config/oracle');
 
 const app = express();
@@ -103,18 +105,19 @@ app.get('/health', (req, res) => {
   });
 });
 
-// DocumentaÃ§Ã£o Swagger
+// Documentação Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Rotas de autenticaÃ§Ã£o (aplicar rate limiting especÃ­fico)
+// Rotas de autenticação (aplicar rate limiting específico)
 app.use('/auth/login', loginLimiter);
 app.use('/auth', authRoutes);
+app.use('/whatsapp', authenticateToken, whatsappRoutes);
 
-// Rotas protegidas (requerem autenticaÃ§Ã£o)
-// Verificador do banco de domÃ­nio (Oracle)
+// Rotas protegidas (requerem autenticação)
+// Verificador do banco de domínio (Oracle)
 function requireDomainDb(req, res, next) {
   if (!isOracleReady()) {
-    return res.status(503).json({ error: 'ServiÃ§o de dados indisponÃ­vel', code: 'DOMAIN_DB_UNAVAILABLE' });
+    return res.status(503).json({ error: 'Serviço de dados indisponível', code: 'DOMAIN_DB_UNAVAILABLE' });
   }
   next();
 }
@@ -129,7 +132,7 @@ app.use('/natal/relatorios', authenticateToken, requireDomainDb, natalRelatorios
 app.use('/anonovo', authenticateToken, requireDomainDb, anonovoRoutes);
 app.use('/anonovo/relatorios', authenticateToken, requireDomainDb, anonovoRelatoriosRoutes);
 
-// Rota para servir arquivos estÃ¡ticos (se necessÃ¡rio)
+// Rota para servir arquivos estáticos (se necessário)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware de tratamento de erros
@@ -142,8 +145,9 @@ app.use(errorHandler);
 // Inicializar banco de dados e servidor
 async function startServer() {
   try {
-    // Inicializar bancos de dados (SQLite para auth/sessões e Oracle para domÃ­nio)
+    // Inicializar bancos de dados (SQLite para auth/sessões e Oracle para domínio)
     await initAuthDatabase();
+    await initWhatsApp(require('./config/authdb').getAuthDb());
     await initDatabase();
     console.log('Conexão… Banco de dados inicializado com sucesso');
     

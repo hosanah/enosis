@@ -10,3 +10,9 @@ th, td {
   vertical-align: middle;
 }
 
+
+.whatsapp-action-settings { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.whatsapp-action-settings label { font-weight: 600; }
+.whatsapp-action-settings select { min-width: 220px; padding: .65rem .8rem; border: 1px solid #ccd7d1; border-radius: 8px; font: inherit; }
+.whatsapp-action-settings button { padding: .65rem 1rem; border: 0; border-radius: 8px; background: #0dbb84; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.whatsapp-action-settings button:disabled { opacity: .65; cursor: wait; }

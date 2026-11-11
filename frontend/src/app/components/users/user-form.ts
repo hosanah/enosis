@@ -8,7 +8,6 @@ import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { UserService, AppUser } from '../../services/users';
@@ -23,9 +22,7 @@ import { UserService, AppUser } from '../../services/users';
     InputTextModule,
     PasswordModule,
     ButtonModule,
-    ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './user-form.html',
   styleUrls: ['./user-form.scss']
 })

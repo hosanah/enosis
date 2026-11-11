@@ -11,7 +11,6 @@ import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
 import { ButtonModule } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { CardModule } from 'primeng/card';
@@ -22,8 +21,7 @@ import { UserService, AppUser } from '../../services/users';
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [CommonModule, TableModule, PaginatorModule, ButtonModule, ToastModule, TagModule, CardModule, ToolbarModule],
-  providers: [MessageService],
+  imports: [CommonModule, TableModule, PaginatorModule, ButtonModule, TagModule, CardModule, ToolbarModule],
   templateUrl: './user-list.html',
   styleUrls: ['./user-list.scss']
 })

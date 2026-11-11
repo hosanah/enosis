@@ -13,7 +13,6 @@ import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../services/auth';
@@ -28,9 +27,7 @@ import { AuthService } from '../../services/auth';
     InputTextModule,
     PasswordModule,
     ButtonModule,
-    ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './reset-password.html',
   styleUrls: ['./reset-password.scss']
 })

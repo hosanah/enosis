@@ -68,6 +68,7 @@ export class ReservaAnoNovoService {
         data_checkin?: string;
         data_checkout?: string;
         nome_hospede?: string;
+        telefone?: string;
         observacoes?: string | null;
       }[];
     }>(`${this.API}/anonovo/mesas/${idmarcacaomesa}/reservas`);
@@ -102,6 +103,7 @@ export class ReservaAnoNovoService {
         numreserva?: string;
         coduh?: string;
         nome_hospede?: string;
+        telefone?: string;
         observacoes?: string | null;
       }[];
     }>(`${this.API}/anonovo/marcacoes/reserva/${idreservasfront}`);

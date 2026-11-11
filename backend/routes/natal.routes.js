@@ -3,6 +3,14 @@ const router = express.Router();
 const { getOracle } = require('../config/oracle');
 const { getAuthDb } = require('../config/authdb');
 
+const phoneExpr = `CASE
+    WHEN TEL.DDI IS NULL THEN NULL
+    WHEN SUBSTR(TRIM(TO_CHAR(TEL.DDI)), 1, 1) = '+' THEN TRIM(TO_CHAR(TEL.DDI))
+    ELSE '+' || TRIM(TO_CHAR(TEL.DDI))
+  END
+  || NVL(TRIM(TO_CHAR(TEL.DDD)), '')
+  || NVL(TRIM(TO_CHAR(TEL.NUMERO)), '')`;
+
 // GET /natal/reservas
 router.get('/reservas', async (req, res) => {
   try {
@@ -40,18 +48,24 @@ router.get('/reservas', async (req, res) => {
       params.push('%' + String(coduh).toUpperCase() + '%');
     }
 
-    const baseSql = `
+    const buildSql = () => `
       SELECT RV.IDRESERVASFRONT, RV.NUMRESERVA, RV.CODUH,
              RV.DATACHEGPREVISTA AS DATACHECKIN,
              RV.DATAPARTPREVISTA AS DATACHECKOUT,
              H.NOME || ' ' || H.SOBRENOME AS NOMECOMPLETO,
+             MAX(${phoneExpr}) AS TELEFONE,
              (SELECT COUNT(MH2.IDHOSPEDE)
                 FROM CM.MOVIMENTOHOSPEDES MH2
                WHERE MH2.IDRESERVASFRONT = RV.IDRESERVASFRONT) AS TOTALHOSPEDES
         FROM CM.RESERVASFRONT RV,
              CM.MOVIMENTOHOSPEDES MH,
              CM.HOSPEDE H
+        LEFT JOIN CM.VWENDERECO VE ON VE.IDPESSOA = H.IDHOSPEDE
+        LEFT JOIN CM.TELENDPESS TEL ON TEL.IDENDERECO = VE.IDENDERECO
        WHERE ${conditions.join(' AND ')}
+       GROUP BY RV.IDRESERVASFRONT, RV.NUMRESERVA, RV.CODUH,
+                RV.DATACHEGPREVISTA, RV.DATAPARTPREVISTA,
+                H.NOME || ' ' || H.SOBRENOME
        ORDER BY RV.DATACHEGPREVISTA DESC
        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY`;
 
@@ -67,7 +81,7 @@ router.get('/reservas', async (req, res) => {
     const total = (totalRes.rows && totalRes.rows[0] && (totalRes.rows[0].TOTAL || totalRes.rows[0].total)) || 0;
 
     const dataParams = [...params, offset, size];
-    const { rows } = await db.query(baseSql, dataParams);
+    const { rows = [] } = await db.query(buildSql(), dataParams);
 
     const data = (rows || []).map((r) => ({
       id: r.IDRESERVASFRONT ?? r.idreservasfront ?? r.ID ?? r.id,
@@ -76,6 +90,7 @@ router.get('/reservas', async (req, res) => {
       data_checkin: r.DATACHECKIN ?? r.datacheckin ?? r.DATA_CHECKIN ?? r.data_checkin,
       data_checkout: r.DATACHECKOUT ?? r.datacheckout ?? r.DATA_CHECKOUT ?? r.data_checkout,
       nome_hospede: r.NOMECOMPLETO ?? r.nomecompleto ?? r.NOME_HOSPEDE ?? r.nome_hospede,
+      telefone: r.TELEFONE ?? r.telefone ?? '',
       total_hospedes: r.TOTALHOSPEDES ?? r.totalhospedes
     }));
 
@@ -122,13 +137,14 @@ router.get('/mesas/:id/reservas', async (req, res) => {
     }
     const db = getOracle();
     // Consulta para exibir reservas/apartamentos da mesa com observação
-    const sql = `
+    const buildSql = () => `
       SELECT 
           EI.IDMARCACAOMESA,
           EI.IDRESERVASFRONT,
           RF.CODUH,
           EM.NUMMESA,
           H.NOME || ' ' || H.SOBRENOME AS NOMECOMPLETO,
+          MAX(${phoneExpr}) AS TELEFONE,
           COUNT(EI.IDMARCACAOITEM) AS QUANTIDADE,
           MAX(EI.DESCRICAO) AS OBSERVACOES
         FROM CM.ENOMARCACAOITEM EI
@@ -136,6 +152,8 @@ router.get('/mesas/:id/reservas', async (req, res) => {
         JOIN CM.RESERVASFRONT RF    ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
         JOIN CM.MOVIMENTOHOSPEDES MH ON MH.IDRESERVASFRONT = RF.IDRESERVASFRONT
         JOIN CM.HOSPEDE H ON H.IDHOSPEDE = MH.IDHOSPEDE
+        LEFT JOIN CM.VWENDERECO VE ON VE.IDPESSOA = H.IDHOSPEDE
+        LEFT JOIN CM.TELENDPESS TEL ON TEL.IDENDERECO = VE.IDENDERECO
        WHERE MH.PRINCIPAL = 'S'
          AND EM.IDMARCACAOMESA = ?
        GROUP BY 
@@ -144,12 +162,13 @@ router.get('/mesas/:id/reservas', async (req, res) => {
           RF.CODUH,
           EM.NUMMESA,
           H.NOME || ' ' || H.SOBRENOME`;
-    const { rows } = await db.query(sql, [id]);
+    const { rows } = await db.query(buildSql(), [id]);
     const data = (rows || []).map(r => ({
       idreservasfront: r.IDRESERVASFRONT ?? r.idreservasfront,
       coduh: r.CODUH ?? r.coduh,
       nummesa: r.NUMMESA ?? r.nummesa,
       nome_hospede: r.NOMECOMPLETO ?? r.nomecompleto,
+      telefone: r.TELEFONE ?? r.telefone ?? '',
       quantidade: r.QUANTIDADE ?? r.quantidade,
       observacoes: r.OBSERVACOES ?? r.observacoes ?? null
     }));
@@ -170,7 +189,7 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
     }
 
     const db = getOracle();
-    const sql = `
+    const buildSql = () => `
       SELECT 
         EI.IDRESERVASFRONT,
         EI.IDMARCACAOMESA,
@@ -178,6 +197,7 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
         RF.NUMRESERVA,
         RF.CODUH,
         H.NOME || ' ' || H.SOBRENOME AS NOMECOMPLETO,
+        MAX(${phoneExpr}) AS TELEFONE,
         COUNT(EI.IDMARCACAOITEM) AS QUANTIDADE,
         MAX(EI.DESCRICAO) AS OBSERVACOES
       FROM CM.ENOMARCACAOITEM EI
@@ -185,6 +205,8 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
       JOIN CM.RESERVASFRONT RF ON RF.IDRESERVASFRONT = EI.IDRESERVASFRONT
       JOIN CM.MOVIMENTOHOSPEDES MH ON MH.IDRESERVASFRONT = RF.IDRESERVASFRONT
       JOIN CM.HOSPEDE H ON H.IDHOSPEDE = MH.IDHOSPEDE
+      LEFT JOIN CM.VWENDERECO VE ON VE.IDPESSOA = H.IDHOSPEDE
+      LEFT JOIN CM.TELENDPESS TEL ON TEL.IDENDERECO = VE.IDENDERECO
       WHERE MH.PRINCIPAL = 'S'
         AND EI.IDRESERVASFRONT = ?
       GROUP BY 
@@ -196,7 +218,7 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
         H.NOME || ' ' || H.SOBRENOME
     `;
 
-    const { rows } = await db.query(sql, [id]);
+    const { rows } = await db.query(buildSql(), [id]);
     const data = (rows || []).map((r) => ({
       idreservasfront: r.IDRESERVASFRONT ?? r.idreservasfront,
       idmarcacaomesa: r.IDMARCACAOMESA ?? r.idmarcacaomesa,
@@ -204,6 +226,7 @@ router.get('/marcacoes/reserva/:id', async (req, res) => {
       numreserva: r.NUMRESERVA ?? r.numreserva,
       coduh: r.CODUH ?? r.coduh,
       nome_hospede: r.NOMECOMPLETO ?? r.nomecompleto,
+      telefone: r.TELEFONE ?? r.telefone ?? '',
       quantidade: r.QUANTIDADE ?? r.quantidade,
       observacoes: r.OBSERVACOES ?? r.observacoes ?? null
     }));

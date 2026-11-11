@@ -1,6 +1,7 @@
 <div class="reserva-ano-novo page">
-  <p-toast></p-toast>
+
   <p-confirmDialog></p-confirmDialog>
+  <app-whatsapp-confirmation [(visible)]="whatsappVisible" [booking]="completedBooking" [allowResend]="whatsappResendMode" evento="anonovo" (printRequested)="onImprimirVoucherMesa($event)"></app-whatsapp-confirmation>
 
   <!-- Painel 1 – Filtros de Reserva -->
   <div class="card">
@@ -226,11 +227,14 @@
                     <span *ngIf="m.observacoes">&nbsp;|&nbsp;<strong>Obs:</strong> {{ m.observacoes }}</span>
                   </div>
                   <div class="reserva-message-actions">
-                    <button pButton type="button" class="p-button-sm" (click)="onCancelarMarcacaoReserva(m)">
-                      Cancelar
+                    <button pButton type="button" class="p-button-sm p-button-danger p-button-text p-button-icon-only" icon="pi pi-times"
+                      aria-label="Cancelar marcação" title="Cancelar marcação" (click)="onCancelarMarcacaoReserva(m)">
                     </button>
                     <button pButton type="button" class="p-button-sm p-button-secondary" icon="pi pi-print"
                       (click)="onReimprimirMarcacao(m)">
+                    </button>
+                    <button pButton type="button" class="p-button-sm p-button-success" icon="pi pi-whatsapp"
+                      aria-label="Reenviar WhatsApp" title="Reenviar WhatsApp" (click)="onReenviarWhatsapp(m)">
                     </button>
                   </div>
                 </div>
@@ -257,11 +261,14 @@
                   {{ r.quantidade ?? r.reservas }} pessoa(s)
                 </div>
 
-                <button pButton type="button" class="p-button-sm" (click)="onExcluirReservaMesa(r)">
-                  Cancelar
+                <button pButton type="button" class="p-button-sm p-button-danger p-button-text p-button-icon-only" icon="pi pi-times"
+                  aria-label="Cancelar reserva da mesa" title="Cancelar reserva da mesa" (click)="onExcluirReservaMesa(r)">
                 </button>
                 <button pButton type="button" class="p-button-sm p-button-secondary" icon="pi pi-print"
                   (click)="onImprimirVoucherMesa(r)">
+                </button>
+                <button pButton type="button" class="p-button-sm p-button-success" icon="pi pi-whatsapp"
+                  aria-label="Reenviar WhatsApp" title="Reenviar WhatsApp" (click)="onReenviarWhatsapp(r)">
                 </button>
               </div>
             </p-message>
