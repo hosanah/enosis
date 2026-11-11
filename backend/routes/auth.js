@@ -306,7 +306,7 @@ router.post('/reset-password', requireApiKey, async (req, res, next) => {
       return next(new ApiError(400, 'Senha deve ter pelo menos 6 caracteres', 'PASSWORD_TOO_SHORT'));
     }
 
-    const db = getDatabase();
+    const db = getAuthDb();
     db.get('SELECT id FROM users WHERE email = ?', [email], async (err, user) => {
       if (err) {
         console.error('❌ Erro ao buscar usuário para reset de senha:', err.message);
